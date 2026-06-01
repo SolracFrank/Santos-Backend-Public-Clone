@@ -1,0 +1,6 @@
+@EsApi_HostAddress = http://localhost:5052
+
+GET {{EsApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
