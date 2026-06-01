@@ -24,6 +24,9 @@ public class AppDbContext : DbContext
     public DbSet<Users> Users { get; set; }
     public DbSet<Payt> Paytypes { get; set; }
     public DbSet<Paymd> Paymds { get; set; }
+    public DbSet<Estimate> Estimates { get; set; }
+    public DbSet<Estimatedetail> Estimatedetails { get; set; }
+    public DbSet<Customermessage> Customermessages { get; set; }
 protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
     modelBuilder.Entity<Employee>().ToTable("Employee");
@@ -43,6 +46,9 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
     modelBuilder.Entity<Users>().ToTable("Users");
     modelBuilder.Entity<Payt>().ToTable("Payt");
     modelBuilder.Entity<Paymd>().ToTable("Paymd");
+    modelBuilder.Entity<Estimate>().ToTable("Estimate");
+    modelBuilder.Entity<Estimatedetail>().ToTable("Estimatedetail");
+    modelBuilder.Entity<Customermessage>().ToTable("Customermessage");
 
     modelBuilder.Entity<Address>().HasKey(x => x.Idaddress);
     modelBuilder.Entity<Terms>().HasKey(x => x.Idterms);
@@ -61,6 +67,9 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
     modelBuilder.Entity<Users>().HasKey(x => x.Idusers);
     modelBuilder.Entity<Payt>().HasKey(x => x.Idpayt);
     modelBuilder.Entity<Paymd>().HasKey(x => x.Idpaymd);
+    modelBuilder.Entity<Estimate>().HasKey(x => x.Idestimate);
+    modelBuilder.Entity<Estimatedetail>().HasKey(x => x.Idestimatedetail);
+    modelBuilder.Entity<Customermessage>().HasKey(x => x.Idcustomermessage);
     base.OnModelCreating(modelBuilder);
 }
 }

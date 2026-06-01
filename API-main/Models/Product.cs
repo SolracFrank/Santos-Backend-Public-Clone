@@ -234,3 +234,73 @@ public class Users
     [ForeignKey(nameof(Idjobinfo))]
     public Jobinfo? Jobinfo { get; set; }
 }
+
+ public class Estimatedetail
+ {
+        [Key]
+        public int Idestimatedetail { get; set; }
+        public string? Itemname { get; set; }
+        public string? Description { get; set; }
+        public decimal Qty { get; set; }
+        public decimal Cost { get; set; }
+        public decimal Total { get; set; }
+        public int Idestimate { get; set; }
+
+        [ForeignKey(nameof(Idestimate))]
+        public Estimate? Estimate { get; set; }
+        public int? Iditem { get; set; }
+
+        [ForeignKey(nameof(Iditem))]
+        public Itservice? Itservice { get; set; }
+    }
+
+    public class Customermessage
+    {
+        [Key]
+        public int Idcustomermessage { get; set; }
+
+        public string Message { get; set; } = null!;
+    }
+     public class Estimate
+    {
+        [Key]
+        public int Idestimate { get; set; }
+
+        public int Estimatenumber { get; set; }
+        public DateTime Estimatedate { get; set; }
+        public DateTime? Expdate { get; set; }
+        public DateTime? Datetobecompleted { get; set; }
+        public DateTime? Dateordered { get; set; }
+
+        public string? Memo { get; set; }
+
+        public decimal Subtotal { get; set; }
+        public decimal Markup { get; set; }
+        public decimal Total { get; set; }
+        public bool Activeestimate { get; set; } = true;
+        public decimal Openbalance { get; set; }
+
+        public int? Idusers { get; set; }
+
+        [ForeignKey(nameof(Idusers))]
+        public Users? Users { get; set; }
+
+        public int? Idterms { get; set; }
+
+        [ForeignKey(nameof(Idterms))]
+        public Terms? Terms { get; set; }
+
+        public int? Idrepsales { get; set; }
+
+        [ForeignKey(nameof(Idrepsales))]
+        public Repsales? Repsales { get; set; }
+
+        public int? Idcustomermessage { get; set; }
+
+        [ForeignKey(nameof(Idcustomermessage))]
+        public Customermessage? Customermessage { get; set; }
+
+        public string? Customermessagetext { get; set; }
+
+        public ICollection<Estimatedetail>? Estimatedetails { get; set; }
+    }
