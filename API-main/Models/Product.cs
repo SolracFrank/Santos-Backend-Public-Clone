@@ -261,46 +261,50 @@ public class Users
 
         public string Message { get; set; } = null!;
     }
-     public class Estimate
-    {
-        [Key]
-        public int Idestimate { get; set; }
+public class Estimate
+{
+    [Key]
+    public int Idestimate { get; set; }
 
-        public int Estimatenumber { get; set; }
-        public DateTime Estimatedate { get; set; }
-        public DateTime? Expdate { get; set; }
-        public DateTime? Datetobecompleted { get; set; }
-        public DateTime? Dateordered { get; set; }
+    public int Estimatenumber { get; set; }
+    public DateTime Estimatedate { get; set; }
+    public DateTime? Expdate { get; set; }
+    public DateTime? Datetobecompleted { get; set; }
+    public DateTime? Dateordered { get; set; }
 
-        public string? Memo { get; set; }
+    public string? Memo { get; set; }
 
-        public decimal Subtotal { get; set; }
-        public decimal Markup { get; set; }
-        public decimal Total { get; set; }
-        public bool Activeestimate { get; set; } = true;
-        public decimal Openbalance { get; set; }
+    public decimal Subtotal { get; set; }
+    public decimal Markup { get; set; }
+    public decimal Total { get; set; }
+    public bool Activeestimate { get; set; } = true;
+    public decimal Openbalance { get; set; }
 
-        public int? Idusers { get; set; }
+    public int? Idusers { get; set; }
 
-        [ForeignKey(nameof(Idusers))]
-        public Users? Users { get; set; }
+    [ForeignKey(nameof(Idusers))]
+    public Users? Users { get; set; }
 
-        public int? Idterms { get; set; }
+    public int? Idterms { get; set; }
 
-        [ForeignKey(nameof(Idterms))]
-        public Terms? Terms { get; set; }
+    [ForeignKey(nameof(Idterms))]
+    public Terms? Terms { get; set; }
 
-        public int? Idrepsales { get; set; }
+    public int? Idrepsales { get; set; }
 
-        [ForeignKey(nameof(Idrepsales))]
-        public Repsales? Repsales { get; set; }
+    [ForeignKey(nameof(Idrepsales))]
+    public Repsales? Repsales { get; set; }
 
-        public int? Idcustomermessage { get; set; }
+    public int? Idcustomermessage { get; set; }
 
-        [ForeignKey(nameof(Idcustomermessage))]
-        public Customermessage? Customermessage { get; set; }
+    [ForeignKey(nameof(Idcustomermessage))]
+    public Customermessage? Customermessage { get; set; }
 
-        public string? Customermessagetext { get; set; }
+    public string? Customermessagetext { get; set; }
 
-        public ICollection<Estimatedetail>? Estimatedetails { get; set; }
-    }
+    public ICollection<Estimatedetail>? Estimatedetails { get; set; }
+    public bool IsCopy { get; set; }
+
+    public int? Idestimatefk { get; set; }
+}
+
