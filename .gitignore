@@ -468,3 +468,6 @@ bin/
 obj/
 [Bb]in/
 [Oo]bj/
+
+## AI
+.codegraph
