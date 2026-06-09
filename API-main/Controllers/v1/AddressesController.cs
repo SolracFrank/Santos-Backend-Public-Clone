@@ -7,9 +7,9 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace EsApi.Controllers.v1;
 
-public class AddresssController : BaseApiController
+public class AddressesController : BaseApiController
 {
-    public AddresssController(IMediator mediator) : base(mediator)
+    public AddressesController(IMediator mediator) : base(mediator)
     {
     }
 
