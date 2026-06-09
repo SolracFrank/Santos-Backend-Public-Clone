@@ -97,7 +97,7 @@ app.UseMiddleware<UnhandledExceptionMiddleware>();
 app.UseHttpLogging();
 
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
 
@@ -109,7 +109,7 @@ if (app.Environment.IsDevelopment())
             options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
         }
 
-        options.DocumentTitle = "Swagger - Jime-store";
+        options.DocumentTitle = "Swagger - Operations API";
         options.RoutePrefix = string.Empty;
     });
 
