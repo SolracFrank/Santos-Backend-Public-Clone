@@ -26,7 +26,6 @@ public partial class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         entity.Property(e => e.Memo).HasColumnType("text");
         entity.Property(e => e.Openbalance).HasPrecision(18, 2);
         entity.Property(e => e.Ponumber).HasMaxLength(100);
-        entity.Property(e => e.Ppenbalance).HasPrecision(18, 2);
         entity.Property(e => e.Subtotal).HasPrecision(18, 2);
         entity.Property(e => e.Total).HasPrecision(18, 2);
 

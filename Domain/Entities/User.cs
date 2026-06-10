@@ -11,7 +11,7 @@ public partial class User
 
     public string? Ubalance { get; set; }
 
-    public DateOnly? Udate { get; set; }
+    public DateTime? Udate { get; set; }
 
     public int? Idaddress { get; set; }
 

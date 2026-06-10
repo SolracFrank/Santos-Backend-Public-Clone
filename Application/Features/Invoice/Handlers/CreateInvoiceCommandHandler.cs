@@ -3,6 +3,7 @@ using Infrastructure.Data;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using LanguageExt.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Invoices;
 
@@ -23,6 +24,15 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
 
         try
         {
+            bool existeInvoice = await _context.Invoices
+            .AnyAsync(x => x.Invoicenumber == request.Invoicenumber, cancellationToken);
+
+            if (existeInvoice)
+            {
+                return new Result<Invoice>(
+                    new InvalidOperationException(
+                        $"Invoice #{request.Invoicenumber} already exists."));
+            }
             var entity = new Invoice
             {
                 Idinvoice = request.Idinvoice,
@@ -35,7 +45,6 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                 Subtotal = request.Subtotal,
                 Markup = request.Markup,
                 Total = request.Total,
-                Ppenbalance = request.Ppenbalance,
                 Activeinvoice = request.Activeinvoice,
                 Idusers = request.Idusers,
                 Idterms = request.Idterms,

@@ -32,7 +32,9 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Resul
                 Idusers = request.Idusers,
                 Ucustomer = request.Ucustomer,
                 Ubalance = request.Ubalance,
-                Udate = request.Udate,
+                Udate = request.Udate.HasValue
+                ? request.Udate.Value.ToDateTime(TimeOnly.MinValue)
+                : null,
                 Idaddress = request.Idaddress,
                 Idterms = request.Idterms,
                 Idcustomer = request.Idcustomer,

@@ -25,8 +25,6 @@ public partial class Invoice
 
     public decimal Total { get; set; }
 
-    public decimal Ppenbalance { get; set; }
-
     public bool? Activeinvoice { get; set; }
 
     public int? Idusers { get; set; }

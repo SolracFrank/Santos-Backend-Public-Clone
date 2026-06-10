@@ -4,4 +4,4 @@ using LanguageExt.Common;
 
 namespace Application.Features.Users;
 
-public record CreateUserCommand(int Idusers, string Ucustomer, string? Ubalance, DateOnly? Udate, int? Idaddress, int? Idterms, int? Idcustomer, int? Idrepsales, int? Idjobinfo) : IRequest<Result<User>>;
+public record CreateUserCommand(int Idusers, string Ucustomer, string? Ubalance, DateTime? Udate, int? Idaddress, int? Idterms, int? Idcustomer, int? Idrepsales, int? Idjobinfo) : IRequest<Result<User>>;

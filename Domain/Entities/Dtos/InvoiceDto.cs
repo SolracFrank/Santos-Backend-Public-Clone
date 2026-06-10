@@ -12,7 +12,6 @@ public class InvoiceDto
     public decimal Subtotal { get; set; }
     public decimal Markup { get; set; }
     public decimal Total { get; set; }
-    public decimal Ppenbalance { get; set; }
     public bool? Activeinvoice { get; set; }
     public int? Idusers { get; set; }
     public int? Idterms { get; set; }

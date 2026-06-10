@@ -29,7 +29,7 @@ public class GetTransactionsByCustomerQueryHandler : IRequestHandler<GetTransact
 
         try
         {
-            return new Result<List<CustomerTransaction>>(await _context.Estimates
+            var estimates = await _context.Estimates
                 .Where(e => e.Idusers == request.IdUser)
                 .Select(e => new CustomerTransaction
                 {
@@ -40,8 +40,41 @@ public class GetTransactionsByCustomerQueryHandler : IRequestHandler<GetTransact
                     Account = "Estimate",
                     Amount = e.Total
                 })
+                .ToListAsync(cancellationToken);
+
+            var invoices = await _context.Invoices
+                .Where(i => i.Idusers == request.IdUser)
+               .Select(i => new CustomerTransaction
+               {
+                   Idinvoice = i.Idinvoice,
+                   Type = "Invoice",
+                   Num = i.Invoicenumber.ToString(),
+                   Date = i.Invoicedate,
+                   Account = "Invoice",
+                   Amount = i.Total
+               })
+                .ToListAsync(cancellationToken);
+
+            var payments = await _context.Payments
+                .Where(p => p.Idusers == request.IdUser)
+                .Select(p => new CustomerTransaction
+                {
+                    Idpayment = p.Idpayment,
+                    Type = "Payment",
+                    Num = p.Paymentnumber.ToString(),
+                    Date = p.Paymentdate,
+                    Account = "Payment",
+                    Amount = -p.Amount
+                })
+                 .ToListAsync(cancellationToken);
+
+            var transactions = estimates
+                .Concat(invoices)
+                .Concat(payments)
                 .OrderByDescending(x => x.Date)
-                .ToListAsync(cancellationToken));
+                .ToList();
+
+            return new Result<List<CustomerTransaction>>(transactions);
         }
         catch (Exception ex)
         {
