@@ -33,6 +33,26 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                     new InvalidOperationException(
                         $"Invoice #{request.Invoicenumber} already exists."));
             }
+
+            if (request.Createdfromestimateid != null)
+            {
+                var estimate = await _context.Estimates
+                    .FirstOrDefaultAsync(x => x.Idestimate == request.Createdfromestimateid, cancellationToken);
+
+                if (estimate == null)
+                {
+                    return new Result<Invoice>(
+                        new InvalidOperationException("The estimate does not exist."));
+                }
+
+                if (estimate.Estimatenumber != request.Invoicenumber)
+                {
+                    return new Result<Invoice>(
+                        new InvalidOperationException(
+                            $"Invoice number must match Estimate number #{estimate.Estimatenumber}."));
+                }
+            }
+
             var entity = new Invoice
             {
                 Idinvoice = request.Idinvoice,
@@ -53,7 +73,10 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
                 Customermessagetext = request.Customermessagetext,
                 Createdfromestimateid = request.Createdfromestimateid,
                 Dateordered = request.Dateordered,
-                Openbalance = request.Openbalance
+                Openbalance = request.Openbalance,
+                Idtaxrate = request.Idtaxrate,
+                Taxrate = request.Taxrate,
+                Taxamount = request.Taxamount
             };
             _logger.LogInformation("Creating {EntityName}. Handler: {HandlerName}.", nameof(Invoice), nameof(CreateInvoiceCommandHandler));
             _context.Set<Invoice>().Add(entity);

@@ -21,6 +21,9 @@ public class InvoiceDto
     public int? Createdfromestimateid { get; set; }
     public DateTime? Dateordered { get; set; }
     public decimal Openbalance { get; set; }
+    public int? Idtaxrate { get; set; }
+    public decimal Taxrate { get; set; }
+    public decimal Taxamount { get; set; }
     public List<InvoicedetailDto> Invoicedetails { get; set; } = new List<InvoicedetailDto>();
     public List<PaymentApplyDto> PaymentApplies { get; set; } = new List<PaymentApplyDto>();
 }

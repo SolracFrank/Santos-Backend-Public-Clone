@@ -25,9 +25,15 @@ public partial class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         entity.Property(e => e.Markup).HasPrecision(18, 2);
         entity.Property(e => e.Memo).HasColumnType("text");
         entity.Property(e => e.Openbalance).HasPrecision(18, 2);
+        entity.Property(e => e.Idtaxrate);
+        entity.Property(e => e.Taxrate).HasPrecision(10, 4).HasDefaultValueSql("'0'");
+        entity.Property(e => e.Taxamount).HasPrecision(10, 2).HasDefaultValueSql("'0'");
         entity.Property(e => e.Ponumber).HasMaxLength(100);
         entity.Property(e => e.Subtotal).HasPrecision(18, 2);
         entity.Property(e => e.Total).HasPrecision(18, 2);
+
+        entity.HasOne(d => d.IdtaxrateNavigation).WithMany(p => p.Invoices)
+         .HasForeignKey(d => d.Idtaxrate).HasConstraintName("FK_Invoices_TaxRates");
 
         OnConfigurePartial(entity);
     }

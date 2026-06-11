@@ -4,4 +4,27 @@ using LanguageExt.Common;
 
 namespace Application.Features.Invoices;
 
-public record CreateInvoiceCommand(int Idinvoice, int Invoicenumber, DateTime Invoicedate, DateTime? Duedate, DateTime? Dteordered, string? Ponumber, string? Memo, decimal Subtotal, decimal Markup, decimal Total, bool? Activeinvoice, int? Idusers, int? Idterms, int? Idrepsales, int? Idcustomermessage, string? Customermessagetext, int? Createdfromestimateid, DateTime? Dateordered, decimal Openbalance) : IRequest<Result<Invoice>>;
+public record CreateInvoiceCommand(
+    int Idinvoice,
+    int Invoicenumber,
+    DateTime Invoicedate,
+    DateTime? Duedate,
+    DateTime? Dteordered,
+    string? Ponumber,
+    string? Memo,
+    decimal Subtotal,
+    decimal Markup,
+    decimal Total,
+    bool? Activeinvoice,
+    int? Idusers,
+    int? Idterms,
+    int? Idrepsales,
+    int? Idcustomermessage,
+    string? Customermessagetext,
+    int? Createdfromestimateid,
+    DateTime? Dateordered,
+    decimal Openbalance,
+    int? Idtaxrate,
+    decimal Taxrate,
+    decimal Taxamount
+) : IRequest<Result<Invoice>>;

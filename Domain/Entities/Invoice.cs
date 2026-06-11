@@ -43,6 +43,14 @@ public partial class Invoice
 
     public decimal Openbalance { get; set; }
 
+    public int? Idtaxrate { get; set; }
+
+    public decimal Taxrate { get; set; }
+
+    public decimal Taxamount { get; set; }
+
+    public virtual TaxRate? IdtaxrateNavigation { get; set; }
+
     public virtual ICollection<Invoicedetail> Invoicedetails { get; set; } = new List<Invoicedetail>();
 
     public virtual ICollection<PaymentApply> PaymentApplies { get; set; } = new List<PaymentApply>();

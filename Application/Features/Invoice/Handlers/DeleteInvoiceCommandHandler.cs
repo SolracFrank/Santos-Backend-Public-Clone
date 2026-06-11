@@ -32,8 +32,9 @@ public class DeleteInvoiceCommandHandler : IRequestHandler<DeleteInvoiceCommand,
                 _logger.LogWarning("Invoice not found. Handler: {HandlerName}.", nameof(DeleteInvoiceCommandHandler));
                 throw new KeyNotFoundException("Invoice not found");
             }
-            _logger.LogInformation("Deleting {EntityName} with id {Id}. Handler: {HandlerName}.", "Invoice", request.Id, nameof(DeleteInvoiceCommandHandler));
-            _context.Invoices.Remove(item);
+            _logger.LogInformation("Hiding {EntityName} with id {Id}. Handler: {HandlerName}.", "Invoice", request.Id, nameof(DeleteInvoiceCommandHandler));
+
+            item.Activeinvoice = false;
             _logger.LogInformation("Saving changes for {HandlerName}.", nameof(DeleteInvoiceCommandHandler));
             var savedChanges = await _context.SaveChangesAsync(cancellationToken);
             if (savedChanges <= 0)

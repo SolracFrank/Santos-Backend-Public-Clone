@@ -32,8 +32,10 @@ public class DeleteEstimateCommandHandler : IRequestHandler<DeleteEstimateComman
                 _logger.LogWarning("Estimate not found. Handler: {HandlerName}.", nameof(DeleteEstimateCommandHandler));
                 throw new KeyNotFoundException("Estimate not found");
             }
-            _logger.LogInformation("Deleting {EntityName} with id {Id}. Handler: {HandlerName}.", "Estimate", request.Id, nameof(DeleteEstimateCommandHandler));
-            _context.Estimates.Remove(item);
+            _logger.LogInformation("Hiding {EntityName} with id {Id}. Handler: {HandlerName}.", "Estimate", request.Id, nameof(DeleteEstimateCommandHandler));
+
+            item.Activeestimate = false;
+
             _logger.LogInformation("Saving changes for {HandlerName}.", nameof(DeleteEstimateCommandHandler));
             var savedChanges = await _context.SaveChangesAsync(cancellationToken);
             if (savedChanges <= 0)

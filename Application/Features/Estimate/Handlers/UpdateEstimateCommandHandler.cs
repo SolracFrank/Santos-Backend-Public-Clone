@@ -24,42 +24,36 @@ public class UpdateEstimateCommandHandler : IRequestHandler<UpdateEstimateComman
 
         try
         {
-            if (request.Id != request.Idestimate)
-                throw new ArgumentException("Id mismatch");
+            if (request.Id <= 0)
+                return new Result<Estimate>(new ArgumentException("Invalid estimate id."));
 
-            var entity = new Estimate
-            {
-                Idestimate = request.Idestimate,
-                Estimatenumber = request.Estimatenumber,
-                Estimatedate = request.Estimatedate,
-                Expdate = request.Expdate,
-                Datetobecompleted = request.Datetobecompleted,
-                Dateordered = request.Dateordered,
-                Memo = request.Memo,
-                Subtotal = request.Subtotal,
-                Markup = request.Markup,
-                Total = request.Total,
-                Activeestimate = request.Activeestimate,
-                Openbalance = request.Openbalance,
-                Idusers = request.Idusers,
-                Idterms = request.Idterms,
-                Idrepsales = request.Idrepsales,
-                Idcustomermessage = request.Idcustomermessage,
-                Customermessagetext = request.Customermessagetext,
-                IsCopy = request.IsCopy,
-                CopiedFromEstimateId = request.CopiedFromEstimateId
-            };
-            _logger.LogInformation("Updating {EntityName} with id {Id}. Handler: {HandlerName}.", "Estimate", request.Id, nameof(UpdateEstimateCommandHandler));
-            _context.Entry(entity).State = EntityState.Modified;
-            _logger.LogInformation("Saving changes for {HandlerName}.", nameof(UpdateEstimateCommandHandler));
-            var savedChanges = await _context.SaveChangesAsync(cancellationToken);
-            if (savedChanges <= 0)
-            {
-                var saveException = new InvalidOperationException($"No changes were saved while handling UpdateEstimateCommand.");
-                _logger.LogWarning(saveException, "No changes were saved for {HandlerName}.", nameof(UpdateEstimateCommandHandler));
-                return new Result<Estimate>(saveException);
-            }
-            _logger.LogInformation("Changes saved for {HandlerName}.", nameof(UpdateEstimateCommandHandler));
+            var entity = await _context.Estimates
+                .FirstOrDefaultAsync(x => x.Idestimate == request.Id, cancellationToken);
+
+            if (entity == null)
+                return new Result<Estimate>(new KeyNotFoundException($"Estimate {request.Id} was not found."));
+
+            entity.Estimatenumber = request.Estimatenumber;
+            entity.Estimatedate = request.Estimatedate;
+            entity.Expdate = request.Expdate;
+            entity.Datetobecompleted = request.Datetobecompleted;
+            entity.Dateordered = request.Dateordered;
+            entity.Memo = request.Memo;
+            entity.Subtotal = request.Subtotal;
+            entity.Markup = request.Markup;
+            entity.Total = request.Total;
+            entity.Activeestimate = request.Activeestimate;
+            entity.Openbalance = request.Openbalance;
+            entity.Idusers = request.Idusers;
+            entity.Idterms = request.Idterms;
+            entity.Idrepsales = request.Idrepsales;
+            entity.Idcustomermessage = request.Idcustomermessage;
+            entity.Customermessagetext = request.Customermessagetext;
+            entity.IsCopy = request.IsCopy;
+            entity.CopiedFromEstimateId = request.CopiedFromEstimateId;
+
+            await _context.SaveChangesAsync(cancellationToken);
+
             return new Result<Estimate>(entity);
         }
         catch (Exception ex)

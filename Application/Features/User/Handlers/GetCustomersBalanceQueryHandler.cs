@@ -33,17 +33,34 @@ public class GetCustomersBalanceQueryHandler : IRequestHandler<GetCustomersBalan
                 {
                     Idusers = u.Idusers,
                     Name = u.Ucustomer,
-                    BalanceTotal = _context.Estimates
-                        .Where(e => e.Idusers == u.Idusers)
-                        .Sum(e => (decimal?)e.Total) ?? 0
+                    BalanceTotal =(_context.Invoices
+                    .Where(i => i.Idusers == u.Idusers && i.Activeinvoice == true)
+                    .Sum(i => (decimal?)i.Openbalance) ?? 0)
                 });
-        
+
             if (!string.IsNullOrWhiteSpace(request.Search))
             {
                 var search = request.Search.Trim();
-                query = query.Where(x => x.Name != null && x.Name.Contains(search));
+
+                query = query.Where(x =>
+                    (x.Name != null && x.Name.Contains(search)) ||
+
+                    _context.Invoices.Any(i =>
+                    i.Idusers == x.Idusers &&
+                    i.Activeinvoice == true &&
+                    i.Invoicenumber.ToString().Contains(search)) ||
+
+                    _context.Estimates.Any(e =>
+                    e.Idusers == x.Idusers &&
+                    e.Activeestimate == true &&
+                    e.Estimatenumber.ToString().Contains(search)) ||
+
+                    _context.Payments.Any(p =>
+                        p.Idusers == x.Idusers &&
+                        p.Paymentnumber.ToString().Contains(search))
+                );
             }
-        
+
             query = request.OrderBy switch
             {
                 "name" => query.OrderBy(x => x.Name),

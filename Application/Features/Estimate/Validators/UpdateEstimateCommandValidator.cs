@@ -7,6 +7,5 @@ public class UpdateEstimateCommandValidator : AbstractValidator<UpdateEstimateCo
     public UpdateEstimateCommandValidator()
     {
         RuleFor(x => x.Id).GreaterThan(0);
-        RuleFor(x => x.Id).Equal(x => x.Idestimate);
     }
 }

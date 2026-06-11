@@ -11,4 +11,5 @@ public class CustomerTransaction
     public DateTime Date { get; set; }
     public string Account { get; set; } = "";
     public decimal Amount { get; set; }
+    public string? Status { get; set; }
 }

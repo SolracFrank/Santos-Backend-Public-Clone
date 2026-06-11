@@ -47,7 +47,10 @@ public class UpdateInvoiceCommandHandler : IRequestHandler<UpdateInvoiceCommand,
                 Customermessagetext = request.Customermessagetext,
                 Createdfromestimateid = request.Createdfromestimateid,
                 Dateordered = request.Dateordered,
-                Openbalance = request.Openbalance
+                Openbalance = request.Openbalance,
+                Idtaxrate = request.Idtaxrate,
+                Taxrate = request.Taxrate,
+                Taxamount = request.Taxamount
             };
             _logger.LogInformation("Updating {EntityName} with id {Id}. Handler: {HandlerName}.", "Invoice", request.Id, nameof(UpdateInvoiceCommandHandler));
             _context.Entry(entity).State = EntityState.Modified;

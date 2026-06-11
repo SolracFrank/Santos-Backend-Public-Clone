@@ -30,30 +30,39 @@ public class GetTransactionsByCustomerQueryHandler : IRequestHandler<GetTransact
         try
         {
             var estimates = await _context.Estimates
-                .Where(e => e.Idusers == request.IdUser)
-                .Select(e => new CustomerTransaction
-                {
-                    Idestimate = e.Idestimate,
-                    Type = "Estimate",
-                    Num = e.Estimatenumber.ToString(),
-                    Date = e.Estimatedate,
-                    Account = "Estimate",
-                    Amount = e.Total
-                })
-                .ToListAsync(cancellationToken);
+            .Where(e => e.Idusers == request.IdUser && e.Activeestimate == true)
+            .Select(e => new CustomerTransaction
+            {
+            Idestimate = e.Idestimate,
+            Type = "Estimate",
+            Num = e.Estimatenumber.ToString(),
+            Date = e.Estimatedate,
+            Account = "Estimate",
+            Amount = e.Total,
+                Status = _context.Invoices.Any(i =>
+                i.Createdfromestimateid == e.Idestimate &&
+                i.Activeinvoice == true)
+                ? "Converted"
+                : "Open"
+            })
+    .ToListAsync(cancellationToken);
 
             var invoices = await _context.Invoices
-                .Where(i => i.Idusers == request.IdUser)
-               .Select(i => new CustomerTransaction
-               {
-                   Idinvoice = i.Idinvoice,
-                   Type = "Invoice",
-                   Num = i.Invoicenumber.ToString(),
-                   Date = i.Invoicedate,
-                   Account = "Invoice",
-                   Amount = i.Total
-               })
-                .ToListAsync(cancellationToken);
+            .Where(i => i.Idusers == request.IdUser && i.Activeinvoice == true)
+            .Select(i => new CustomerTransaction
+            {
+            Idinvoice = i.Idinvoice,
+            Type = "Invoice",
+            Num = i.Invoicenumber.ToString(),
+            Date = i.Invoicedate,
+            Account = "Invoice",
+            Amount = i.Total,
+            Status =
+             i.Openbalance <= 0 ? "Paid" :
+             i.Openbalance < i.Total ? "Partially Paid" :
+             "Open"
+            })
+     .ToListAsync(cancellationToken);  
 
             var payments = await _context.Payments
                 .Where(p => p.Idusers == request.IdUser)
@@ -64,7 +73,8 @@ public class GetTransactionsByCustomerQueryHandler : IRequestHandler<GetTransact
                     Num = p.Paymentnumber.ToString(),
                     Date = p.Paymentdate,
                     Account = "Payment",
-                    Amount = -p.Amount
+                    Amount = -p.Amount,
+                    Status = ""
                 })
                  .ToListAsync(cancellationToken);
 
