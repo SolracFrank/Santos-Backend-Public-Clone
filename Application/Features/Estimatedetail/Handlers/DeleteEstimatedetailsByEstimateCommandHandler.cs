@@ -2,6 +2,8 @@ using Infrastructure.Data;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LanguageExt.Common;
@@ -13,7 +15,9 @@ public class DeleteEstimatedetailsByEstimateCommandHandler : IRequestHandler<Del
     private readonly AppDbContext _context;
     private readonly ILogger<DeleteEstimatedetailsByEstimateCommandHandler> _logger;
 
-    public DeleteEstimatedetailsByEstimateCommandHandler(AppDbContext context, ILogger<DeleteEstimatedetailsByEstimateCommandHandler> logger)
+    public DeleteEstimatedetailsByEstimateCommandHandler(
+        AppDbContext context,
+        ILogger<DeleteEstimatedetailsByEstimateCommandHandler> logger)
     {
         _logger = logger;
         _context = context;
@@ -28,17 +32,24 @@ public class DeleteEstimatedetailsByEstimateCommandHandler : IRequestHandler<Del
             var items = await _context.Estimatedetails
                 .Where(x => x.Idestimate == request.IdEstimate)
                 .ToListAsync(cancellationToken);
-        
-            _context.Estimatedetails.RemoveRange(items);
-            _logger.LogInformation("Saving changes for {HandlerName}.", nameof(DeleteEstimatedetailsByEstimateCommandHandler));
-            var savedChanges = await _context.SaveChangesAsync(cancellationToken);
-            if (savedChanges <= 0)
+
+            if (!items.Any())
             {
-                var saveException = new InvalidOperationException($"No changes were saved while handling DeleteEstimatedetailsByEstimateCommand.");
-                _logger.LogWarning(saveException, "No changes were saved for {HandlerName}.", nameof(DeleteEstimatedetailsByEstimateCommandHandler));
-                return new Result<Unit>(saveException);
+                _logger.LogInformation(
+                    "No estimate details found to delete for EstimateId {EstimateId}.",
+                    request.IdEstimate);
+
+                return new Result<Unit>(Unit.Value);
             }
+
+            _context.Estimatedetails.RemoveRange(items);
+
+            _logger.LogInformation("Saving changes for {HandlerName}.", nameof(DeleteEstimatedetailsByEstimateCommandHandler));
+
+            await _context.SaveChangesAsync(cancellationToken);
+
             _logger.LogInformation("Changes saved for {HandlerName}.", nameof(DeleteEstimatedetailsByEstimateCommandHandler));
+
             return new Result<Unit>(Unit.Value);
         }
         catch (Exception ex)

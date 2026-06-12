@@ -11,6 +11,7 @@ public class UserDto
     public int? Idcustomer { get; set; }
     public int? Idrepsales { get; set; }
     public int? Idjobinfo { get; set; }
+    public string? Unotes { get; set; }
     public List<EstimateDto> Estimates { get; set; } = new List<EstimateDto>();
     public AddressDto? IdaddressNavigation { get; set; }
     public CustomerDto? IdcustomerNavigation { get; set; }

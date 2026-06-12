@@ -40,12 +40,11 @@ public class GetTransactionsByCustomerQueryHandler : IRequestHandler<GetTransact
             Account = "Estimate",
             Amount = e.Total,
                 Status = _context.Invoices.Any(i =>
-                i.Createdfromestimateid == e.Idestimate &&
-                i.Activeinvoice == true)
-                ? "Converted"
+                i.Createdfromestimateid == e.Idestimate)
+                ? "Invoiced"
                 : "Open"
             })
-    .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken);
 
             var invoices = await _context.Invoices
             .Where(i => i.Idusers == request.IdUser && i.Activeinvoice == true)
@@ -62,7 +61,7 @@ public class GetTransactionsByCustomerQueryHandler : IRequestHandler<GetTransact
              i.Openbalance < i.Total ? "Partially Paid" :
              "Open"
             })
-     .ToListAsync(cancellationToken);  
+                .ToListAsync(cancellationToken);  
 
             var payments = await _context.Payments
                 .Where(p => p.Idusers == request.IdUser)

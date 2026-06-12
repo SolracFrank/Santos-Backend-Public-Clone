@@ -23,6 +23,8 @@ public partial class User
 
     public int? Idjobinfo { get; set; }
 
+    public string? Unotes { get; set; }
+
     public virtual ICollection<Estimate> Estimates { get; set; } = new List<Estimate>();
 
     public virtual Address? IdaddressNavigation { get; set; }

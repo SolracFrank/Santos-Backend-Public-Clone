@@ -39,7 +39,8 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Resul
                 Idterms = request.Idterms,
                 Idcustomer = request.Idcustomer,
                 Idrepsales = request.Idrepsales,
-                Idjobinfo = request.Idjobinfo
+                Idjobinfo = request.Idjobinfo,
+                Unotes = request.Unotes
             };
             _logger.LogInformation("Updating {EntityName} with id {Id}. Handler: {HandlerName}.", "User", request.Id, nameof(UpdateUserCommandHandler));
             _context.Entry(entity).State = EntityState.Modified;
