@@ -14,12 +14,11 @@ public class EmailController : BaseApiController
 
     [HttpPost("send-pdf")]
     [Consumes("multipart/form-data")]
-    [SwaggerOperation(Summary = "Sends a PDF email.", Description = "Sends an email with a PDF attachment using multipart form data.")]
+    [SwaggerOperation(Summary = "Sends an email with attachments.", Description = "Sends an email with an optional main PDF and optional additional validated attachments using multipart form data.")]
     [SwaggerResponse(StatusCodes.Status200OK, "The email was sent.")]
     [SwaggerResponse(StatusCodes.Status400BadRequest, "The request failed validation.")]
-    public async Task<IActionResult> SendPdfEmail([FromForm] SendPdfEmailCommand command, CancellationToken cancellationToken)
+    public Task<IActionResult> SendEmail([FromForm] SendEmailCommand command, CancellationToken cancellationToken)
     {
-        await Mediator.Send(command, cancellationToken);
-        return Ok(new { message = "Correo enviado correctamente." });
+        return SendOkAsync(command, cancellationToken);
     }
 }

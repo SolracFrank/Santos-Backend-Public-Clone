@@ -28,6 +28,16 @@ public static class DependencyInjection
             builder.Configuration.GetSection(BrevoConfiguration.SectionName)
         );
 
+        builder.Services.AddOptions<EmailAttachmentOptions>()
+            .Bind(builder.Configuration.GetSection(EmailAttachmentOptions.SectionName))
+            .Validate(options => options.MaxFileSizeMb > 0, "EmailAttachments:MaxFileSizeMb must be greater than zero.")
+            .Validate(options => options.MaxFileCount > 0, "EmailAttachments:MaxFileCount must be greater than zero.")
+            .Validate(options => options.AllowedExtensions is { Length: > 0 }, "EmailAttachments:AllowedExtensions cannot be empty.")
+            .Validate(
+                options => options.AllowedExtensions is not null && options.AllowedExtensions.All(EmailAttachmentSecurity.IsSupportedExtension),
+                "EmailAttachments:AllowedExtensions contains an unsupported extension.")
+            .ValidateOnStart();
+
         // Services
         builder.Services.AddTransient<IEmailService, BrevoEmailService>();
 
