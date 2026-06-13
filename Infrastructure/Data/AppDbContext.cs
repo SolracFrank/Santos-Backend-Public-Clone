@@ -9,6 +9,7 @@ public partial class AppDbContext : DbContext
         : base(options)
     {
     }
+    public DbSet<Attachment> Attachments { get; set; }
 
     public virtual DbSet<Account> Accounts { get; set; }
 
@@ -65,6 +66,23 @@ public partial class AppDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
         OnModelCreatingPartial(modelBuilder);
+
+        modelBuilder.Entity<Attachment>(entity =>
+        {
+            entity.HasKey(e => e.Idattachment);
+
+            entity.Property(e => e.EntityType)
+                .HasMaxLength(20)
+                .IsRequired();
+
+            entity.Property(e => e.FileName)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.FilePath)
+                .HasMaxLength(500)
+                .IsRequired();
+        });
     }
 
     partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
