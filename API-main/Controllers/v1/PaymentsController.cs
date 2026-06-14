@@ -57,6 +57,6 @@ public class PaymentsController : BaseApiController
     [SwaggerResponse(StatusCodes.Status404NotFound, "The payment was not found.")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
-        return await SendOkAsync(new DeletePaymentCommand(id), cancellationToken);
+        return await SendAsync(new DeletePaymentCommand(id), cancellationToken);
     }
 }

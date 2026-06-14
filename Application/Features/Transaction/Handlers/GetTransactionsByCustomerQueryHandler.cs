@@ -47,7 +47,7 @@ public class GetTransactionsByCustomerQueryHandler : IRequestHandler<GetTransact
                 .ToListAsync(cancellationToken);
 
             var invoices = await _context.Invoices
-            .Where(i => i.Idusers == request.IdUser && i.Activeinvoice == true)
+            .Where(i => i.Idusers == request.IdUser)
             .Select(i => new CustomerTransaction
             {
             Idinvoice = i.Idinvoice,

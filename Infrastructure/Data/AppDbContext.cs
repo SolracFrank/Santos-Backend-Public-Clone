@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Infrastructure.Data.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;
@@ -61,8 +62,12 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<TaxRate> TaxRates { get; set; }
 
+    public virtual DbSet<EmailHistory> EmailHistories { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.ApplyConfiguration(new EmailHistoryConfiguration());
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
         OnModelCreatingPartial(modelBuilder);

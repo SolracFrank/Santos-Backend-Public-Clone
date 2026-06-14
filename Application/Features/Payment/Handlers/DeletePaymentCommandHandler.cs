@@ -1,58 +1,65 @@
 using Infrastructure.Data;
-using MediatR;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Domain.Entities;
 using LanguageExt.Common;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Payments;
 
-public class DeletePaymentCommandHandler : IRequestHandler<DeletePaymentCommand, Result<Unit>>
+public class DeletePaymentCommandHandler
+    : IRequestHandler<DeletePaymentCommand, Result<bool>>
 {
     private readonly AppDbContext _context;
-    private readonly ILogger<DeletePaymentCommandHandler> _logger;
 
-    public DeletePaymentCommandHandler(AppDbContext context, ILogger<DeletePaymentCommandHandler> logger)
+    public DeletePaymentCommandHandler(AppDbContext context)
     {
-        _logger = logger;
         _context = context;
     }
 
-    public async Task<Result<Unit>> Handle(DeletePaymentCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(
+        DeletePaymentCommand request,
+        CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting handler {HandlerName}.", nameof(DeletePaymentCommandHandler));
-
         try
         {
-            var item = await _context.Payments.FindAsync(new object[] { request.Id }, cancellationToken);
-            if (item == null)
+            var payment = await _context.Payments
+                .Include(p => p.PaymentApplies)
+                .FirstOrDefaultAsync(
+                    x => x.Idpayment == request.Id,
+                    cancellationToken);
+
+            if (payment == null)
+                return new Result<bool>(
+                    new KeyNotFoundException("Payment not found."));
+
+            foreach (var apply in payment.PaymentApplies.ToList())
             {
-                _logger.LogWarning("Payment not found. Handler: {HandlerName}.", nameof(DeletePaymentCommandHandler));
-                throw new KeyNotFoundException("Payment not found");
+                var invoice = await _context.Invoices
+                    .FirstOrDefaultAsync(
+                        x => x.Idinvoice == apply.Idinvoice,
+                        cancellationToken);
+
+                if (invoice != null)
+                {
+                    invoice.Openbalance += apply.AmountApplied;
+
+                    if (invoice.Openbalance > invoice.Total)
+                        invoice.Openbalance = invoice.Total;
+
+                    invoice.Activeinvoice = invoice.Openbalance > 0;
+                }
+
+                _context.PaymentApplies.Remove(apply);
             }
-            _logger.LogInformation("Deleting {EntityName} with id {Id}. Handler: {HandlerName}.", "Payment", request.Id, nameof(DeletePaymentCommandHandler));
-            _context.Payments.Remove(item);
-            _logger.LogInformation("Saving changes for {HandlerName}.", nameof(DeletePaymentCommandHandler));
-            var savedChanges = await _context.SaveChangesAsync(cancellationToken);
-            if (savedChanges <= 0)
-            {
-                var saveException = new InvalidOperationException($"No changes were saved while handling DeletePaymentCommand.");
-                _logger.LogWarning(saveException, "No changes were saved for {HandlerName}.", nameof(DeletePaymentCommandHandler));
-                return new Result<Unit>(saveException);
-            }
-            _logger.LogInformation("Changes saved for {HandlerName}.", nameof(DeletePaymentCommandHandler));
-            return new Result<Unit>(Unit.Value);
+
+            _context.Payments.Remove(payment);
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error while handling {HandlerName}.", nameof(DeletePaymentCommandHandler));
-            return new Result<Unit>(ex);
-        }
-        finally
-        {
-            _logger.LogInformation("Finished handler {HandlerName}.", nameof(DeletePaymentCommandHandler));
+            return new Result<bool>(ex);
         }
     }
 }
