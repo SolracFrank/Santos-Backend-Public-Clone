@@ -10,6 +10,7 @@ public interface IEmailService
         string subject,
         string htmlBody,
         string? textBody = null,
+        EmailAttachedConfiguration? mainPdf = null,
         IReadOnlyCollection<EmailAttachedConfiguration>? attachments = null,
         CancellationToken cancellationToken = default);
 }

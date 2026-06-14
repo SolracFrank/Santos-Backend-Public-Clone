@@ -12,13 +12,16 @@ using MimeKit;
 public class BrevoEmailService : IEmailService
 {
     private readonly BrevoConfiguration _emailSettings;
+    private readonly EmailAttachmentOptions _attachmentOptions;
     private readonly ILogger<BrevoEmailService> _logger;
 
     public BrevoEmailService(
         IOptions<BrevoConfiguration> emailOptions,
+        IOptions<EmailAttachmentOptions> attachmentOptions,
         ILogger<BrevoEmailService> logger)
     {
         _emailSettings = emailOptions.Value;
+        _attachmentOptions = attachmentOptions.Value;
         _logger = logger;
     }
 
@@ -27,6 +30,7 @@ public class BrevoEmailService : IEmailService
         string subject,
         string htmlBody,
         string? textBody = null,
+        EmailAttachedConfiguration? mainPdf = null,
         IReadOnlyCollection<EmailAttachedConfiguration>? attachments = null,
         CancellationToken cancellationToken = default)
     {
@@ -57,16 +61,21 @@ public class BrevoEmailService : IEmailService
             TextBody = textBody ?? "Tu cliente de correo no soporta HTML."
         };
 
+        if (mainPdf is not null)
+        {
+            ValidateMainPdf(mainPdf);
+            AddAttachment(bodyBuilder, mainPdf);
+        }
+
         if (attachments is not null)
         {
+            if (attachments.Count > _attachmentOptions.MaxFileCount)
+                throw new InvalidOperationException($"No se pueden enviar mas de {_attachmentOptions.MaxFileCount} archivos adjuntos.");
+
             foreach (EmailAttachedConfiguration attachment in attachments)
             {
                 ValidateAttachment(attachment);
-
-                bodyBuilder.Attachments.Add(
-                    fileName: attachment.FileName,
-                    data: attachment.Content,
-                    contentType: ContentType.Parse(attachment.ContentType));
+                AddAttachment(bodyBuilder, attachment);
             }
         }
 
@@ -92,9 +101,10 @@ public class BrevoEmailService : IEmailService
             await smtp.DisconnectAsync(true, cancellationToken);
 
             _logger.LogInformation(
-                "Correo enviado a {ToEmail}. Subject: {Subject}. Attachments: {AttachmentCount}",
+                "Correo enviado a {ToEmail}. Subject: {Subject}. Main PDF: {HasMainPdf}. Additional attachments: {AttachmentCount}",
                 toEmail,
                 subject,
+                mainPdf is not null,
                 attachments?.Count ?? 0);
         }
         catch (Exception ex)
@@ -130,10 +140,8 @@ public class BrevoEmailService : IEmailService
             throw new InvalidOperationException("Email:FromName no está configurado.");
     }
 
-    private static void ValidateAttachment(EmailAttachedConfiguration attachment)
+    private void ValidateAttachment(EmailAttachedConfiguration attachment)
     {
-        const int maxAttachmentSizeBytes = 10 * 1024 * 1024;
-
         if (attachment is null)
             throw new ArgumentNullException(nameof(attachment));
 
@@ -143,10 +151,37 @@ public class BrevoEmailService : IEmailService
         if (attachment.Content is null || attachment.Content.Length == 0)
             throw new InvalidOperationException($"El archivo adjunto '{attachment.FileName}' está vacío.");
 
-        if (attachment.Content.Length > maxAttachmentSizeBytes)
-            throw new InvalidOperationException($"El archivo adjunto '{attachment.FileName}' excede 10 MB.");
+        if (attachment.Content.LongLength > _attachmentOptions.MaxFileSizeBytes)
+            throw new InvalidOperationException($"El archivo adjunto '{attachment.FileName}' excede {_attachmentOptions.MaxFileSizeMb} MB.");
 
         if (string.IsNullOrWhiteSpace(attachment.ContentType))
             throw new InvalidOperationException($"El Content-Type del archivo '{attachment.FileName}' es requerido.");
+
+        string extension = EmailAttachmentSecurity.NormalizeExtension(attachment.FileName);
+        if (!EmailAttachmentSecurity.IsAllowedExtension(extension, _attachmentOptions.AllowedExtensions))
+            throw new InvalidOperationException($"El tipo de archivo '{extension}' no esta permitido.");
+
+        if (!EmailAttachmentSecurity.IsAllowedContentType(extension, attachment.ContentType))
+            throw new InvalidOperationException($"El Content-Type del archivo '{attachment.FileName}' no es valido.");
+
+        if (!EmailAttachmentSecurity.HasValidContent(extension, attachment.Content))
+            throw new InvalidOperationException($"El contenido del archivo '{attachment.FileName}' no coincide con su extension.");
+    }
+
+    private void ValidateMainPdf(EmailAttachedConfiguration mainPdf)
+    {
+        ValidateAttachment(mainPdf);
+
+        string extension = EmailAttachmentSecurity.NormalizeExtension(mainPdf.FileName);
+        if (!string.Equals(extension, ".pdf", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("El documento principal debe ser un archivo PDF.");
+    }
+
+    private static void AddAttachment(BodyBuilder bodyBuilder, EmailAttachedConfiguration attachment)
+    {
+        bodyBuilder.Attachments.Add(
+            fileName: EmailAttachmentSecurity.SanitizeFileName(attachment.FileName),
+            data: attachment.Content,
+            contentType: ContentType.Parse(attachment.ContentType));
     }
 }
