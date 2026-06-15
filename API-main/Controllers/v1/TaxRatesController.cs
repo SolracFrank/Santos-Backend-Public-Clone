@@ -1,4 +1,5 @@
 ﻿using Application.Features.TaxRates;
+using Application.Features.TaxRates.Commands;
 using Application.Features.TaxRates.Queries;
 using Domain.Entities;
 using EsApi.Controllers;
@@ -24,6 +25,17 @@ public class TaxRatesController : BaseApiController
         [FromBody] CreateTaxRateCommand command,
         CancellationToken cancellationToken)
     {
+        return await SendAsync(command, cancellationToken);
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Update(
+    int id,
+    [FromBody] UpdateTaxRateCommand command,
+    CancellationToken cancellationToken)
+    {
+        if (id != command.Id) return BadRequest();
+
         return await SendAsync(command, cancellationToken);
     }
 }
