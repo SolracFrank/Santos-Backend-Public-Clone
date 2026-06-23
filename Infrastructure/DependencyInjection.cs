@@ -24,8 +24,8 @@ public static class DependencyInjection
         });
 
         // Brevo Configuration
-        builder.Services.Configure<BrevoConfiguration>(
-            builder.Configuration.GetSection(BrevoConfiguration.SectionName)
+        builder.Services.Configure<MicrosoftGraphEmailConfiguration>(
+        builder.Configuration.GetSection("MicrosoftGraphEmail")
         );
 
         builder.Services.AddOptions<EmailAttachmentOptions>()
@@ -39,7 +39,7 @@ public static class DependencyInjection
             .ValidateOnStart();
 
         // Services
-        builder.Services.AddTransient<IEmailService, BrevoEmailService>();
+        builder.Services.AddTransient<IEmailService, OutlookGraphEmailService>();
 
 
         return builder;
