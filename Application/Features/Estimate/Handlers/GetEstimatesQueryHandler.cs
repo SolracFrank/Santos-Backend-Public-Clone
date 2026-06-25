@@ -10,7 +10,7 @@ using LanguageExt.Common;
 
 namespace Application.Features.Estimates;
 
-public class GetEstimatesQueryHandler : IRequestHandler<GetEstimatesQuery, Result<List<Estimate>>>
+public class GetEstimatesQueryHandler : IRequestHandler<GetEstimatesQuery, Result<List<Domain.Entities.Estimate>>>
 {
     private readonly AppDbContext _context;
     private readonly ILogger<GetEstimatesQueryHandler> _logger;
@@ -21,19 +21,19 @@ public class GetEstimatesQueryHandler : IRequestHandler<GetEstimatesQuery, Resul
         _context = context;
     }
 
-    public async Task<Result<List<Estimate>>> Handle(GetEstimatesQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<Domain.Entities.Estimate>>> Handle(GetEstimatesQuery request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting handler {HandlerName}.", nameof(GetEstimatesQueryHandler));
 
         try
         {
             _logger.LogInformation("Getting list for {EntityName}. Handler: {HandlerName}.", "Estimate", nameof(GetEstimatesQueryHandler));
-            return new Result<List<Estimate>>(await _context.Estimates.ToListAsync(cancellationToken));
+            return new Result<List<Domain.Entities.Estimate>>(await _context.Estimates.ToListAsync(cancellationToken));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while handling {HandlerName}.", nameof(GetEstimatesQueryHandler));
-            return new Result<List<Estimate>>(ex);
+            return new Result<List<Domain.Entities.Estimate>>(ex);
         }
         finally
         {

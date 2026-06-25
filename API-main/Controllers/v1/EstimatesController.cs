@@ -4,6 +4,7 @@ using EsApi.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
+using Application.Features.Estimate.Queries;
 
 namespace EsApi.Controllers.v1;
 
@@ -74,5 +75,11 @@ public class EstimatesController : BaseApiController
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         return await SendOkAsync(new DeleteEstimateCommand(id), cancellationToken);
+    }
+
+    [HttpGet("next-number")]
+    public async Task<IActionResult> GetNextNumber(CancellationToken cancellationToken)
+    {
+        return await SendAsync(new GetNextEstimateNumberQuery(), cancellationToken);
     }
 }

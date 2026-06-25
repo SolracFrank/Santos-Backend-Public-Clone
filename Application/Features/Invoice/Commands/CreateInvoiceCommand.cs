@@ -1,4 +1,3 @@
-using Domain.Entities;
 using MediatR;
 using LanguageExt.Common;
 
@@ -27,4 +26,4 @@ public record CreateInvoiceCommand(
     int? Idtaxrate,
     decimal Taxrate,
     decimal Taxamount
-) : IRequest<Result<Invoice>>;
+) : IRequest<Result<Domain.Entities.Invoice>>;

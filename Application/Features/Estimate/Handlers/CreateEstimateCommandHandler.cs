@@ -1,12 +1,13 @@
-using Domain.Entities;
 using Infrastructure.Data;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using LanguageExt.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Estimates;
 
-public class CreateEstimateCommandHandler : IRequestHandler<CreateEstimateCommand, Result<Estimate>>
+public class CreateEstimateCommandHandler
+    : IRequestHandler<CreateEstimateCommand, Result<Domain.Entities.Estimate>>
 {
     private readonly AppDbContext _context;
     private readonly ILogger<CreateEstimateCommandHandler> _logger;
@@ -17,51 +18,84 @@ public class CreateEstimateCommandHandler : IRequestHandler<CreateEstimateComman
         _logger = logger;
     }
 
-    public async Task<Result<Estimate>> Handle(CreateEstimateCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Domain.Entities.Estimate>> Handle(
+        CreateEstimateCommand request,
+        CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting handler {HandlerName}.", nameof(CreateEstimateCommandHandler));
-
         try
         {
-            var entity = new Estimate
+            const int maxIntentos = 5;
+
+            for (int intento = 1; intento <= maxIntentos; intento++)
             {
-                Idestimate = request.Idestimate,
-                Estimatenumber = request.Estimatenumber,
-                Estimatedate = request.Estimatedate,
-                Expdate = request.Expdate,
-                Datetobecompleted = request.Datetobecompleted,
-                Dateordered = request.Dateordered,
-                Memo = request.Memo,
-                Subtotal = request.Subtotal,
-                Markup = request.Markup,
-                Total = request.Total,
-                Activeestimate = request.Activeestimate,
-                Openbalance = request.Openbalance,
-                Idusers = request.Idusers,
-                Idterms = request.Idterms,
-                Idrepsales = request.Idrepsales,
-                Idcustomermessage = request.Idcustomermessage,
-                Customermessagetext = request.Customermessagetext,
-                IsCopy = request.IsCopy,
-                CopiedFromEstimateId = request.CopiedFromEstimateId
-            };
-            _logger.LogInformation("Creating {EntityName}. Handler: {HandlerName}.", nameof(Estimate), nameof(CreateEstimateCommandHandler));
-            _context.Set<Estimate>().Add(entity);
-            _logger.LogInformation("Saving changes for {HandlerName}.", nameof(CreateEstimateCommandHandler));
-            var savedChanges = await _context.SaveChangesAsync(cancellationToken);
-            if (savedChanges <= 0)
-            {
-                var saveException = new InvalidOperationException($"No changes were saved while handling CreateEstimateCommand.");
-                _logger.LogWarning(saveException, "No changes were saved for {HandlerName}.", nameof(CreateEstimateCommandHandler));
-                return new Result<Estimate>(saveException);
+                int estimateNumber = await ObtenerNumeroSeguroAsync(request.Estimatenumber, cancellationToken);
+
+                var entity = new Domain.Entities.Estimate
+                {
+                    Idestimate = request.Idestimate,
+                    Estimatenumber = estimateNumber,
+                    Estimatedate = request.Estimatedate,
+                    Expdate = request.Expdate,
+                    Datetobecompleted = request.Datetobecompleted,
+                    Dateordered = request.Dateordered,
+                    Memo = request.Memo,
+                    Subtotal = request.Subtotal,
+                    Markup = request.Markup,
+                    Total = request.Total,
+                    Activeestimate = request.Activeestimate,
+                    Openbalance = request.Openbalance,
+                    Idusers = request.Idusers,
+                    Idterms = request.Idterms,
+                    Idrepsales = request.Idrepsales,
+                    Idcustomermessage = request.Idcustomermessage,
+                    Customermessagetext = request.Customermessagetext,
+                    IsCopy = request.IsCopy,
+                    CopiedFromEstimateId = request.CopiedFromEstimateId
+                };
+
+                _context.Set<Domain.Entities.Estimate>().Add(entity);
+
+                try
+                {
+                    await _context.SaveChangesAsync(cancellationToken);
+                    return new Result<Domain.Entities.Estimate>(entity);
+                }
+                catch (DbUpdateException ex)
+                {
+                    _context.Entry(entity).State = EntityState.Detached;
+
+                    _logger.LogWarning(ex,
+                        "Estimate number conflict. Retrying. Attempt {Attempt}.", intento);
+
+                    if (intento == maxIntentos)
+                        return new Result<Domain.Entities.Estimate>(ex);
+                }
             }
-            _logger.LogInformation("Changes saved for {HandlerName}.", nameof(CreateEstimateCommandHandler));
-            return new Result<Estimate>(entity);
+
+            return new Result<Domain.Entities.Estimate>(
+                new InvalidOperationException("Could not create estimate after several attempts."));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while handling {HandlerName}.", nameof(CreateEstimateCommandHandler));
-            return new Result<Estimate>(ex);
+            return new Result<Domain.Entities.Estimate>(ex);
         }
+    }
+
+    private async Task<int> ObtenerNumeroSeguroAsync(int numeroSolicitado, CancellationToken cancellationToken)
+    {
+        if (numeroSolicitado > 0)
+        {
+            bool exists = await _context.Set<Domain.Entities.Estimate>()
+                .AnyAsync(x => x.Estimatenumber == numeroSolicitado, cancellationToken);
+
+            if (!exists)
+                return numeroSolicitado;
+        }
+
+        int lastNumber = await _context.Set<Domain.Entities.Estimate>()
+            .MaxAsync(x => (int?)x.Estimatenumber, cancellationToken) ?? 0;
+
+        return lastNumber + 1;
     }
 }

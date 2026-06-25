@@ -8,7 +8,7 @@ using LanguageExt.Common;
 
 namespace Application.Features.Invoices;
 
-public class GetInvoiceByIdQueryHandler : IRequestHandler<GetInvoiceByIdQuery, Result<Invoice?>>
+public class GetInvoiceByIdQueryHandler : IRequestHandler<GetInvoiceByIdQuery, Result<Domain.Entities.Invoice?>>
 {
     private readonly AppDbContext _context;
     private readonly ILogger<GetInvoiceByIdQueryHandler> _logger;
@@ -19,7 +19,7 @@ public class GetInvoiceByIdQueryHandler : IRequestHandler<GetInvoiceByIdQuery, R
         _context = context;
     }
 
-    public async Task<Result<Invoice?>> Handle(GetInvoiceByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<Domain.Entities.Invoice?>> Handle(GetInvoiceByIdQuery request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting handler {HandlerName}.", nameof(GetInvoiceByIdQueryHandler));
 
@@ -31,15 +31,15 @@ public class GetInvoiceByIdQueryHandler : IRequestHandler<GetInvoiceByIdQuery, R
             {
                 var notFoundException = new KeyNotFoundException("Invoice not found");
                 _logger.LogWarning(notFoundException, "{EntityName} with id {Id} was not found. Handler: {HandlerName}.", "Invoice", request.Id, nameof(GetInvoiceByIdQueryHandler));
-                return new Result<Invoice?>(notFoundException);
+                return new Result<Domain.Entities.Invoice?>(notFoundException);
             }
 
-            return new Result<Invoice?>(entity);
+            return new Result<Domain.Entities.Invoice?>(entity);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while handling {HandlerName}.", nameof(GetInvoiceByIdQueryHandler));
-            return new Result<Invoice?>(ex);
+            return new Result<Domain.Entities.Invoice?>(ex);
         }
         finally
         {

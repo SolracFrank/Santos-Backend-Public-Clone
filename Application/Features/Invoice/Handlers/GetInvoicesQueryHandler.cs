@@ -10,7 +10,7 @@ using LanguageExt.Common;
 
 namespace Application.Features.Invoices;
 
-public class GetInvoicesQueryHandler : IRequestHandler<GetInvoicesQuery, Result<List<Invoice>>>
+public class GetInvoicesQueryHandler : IRequestHandler<GetInvoicesQuery, Result<List<Domain.Entities.Invoice>>>
 {
     private readonly AppDbContext _context;
     private readonly ILogger<GetInvoicesQueryHandler> _logger;
@@ -21,19 +21,19 @@ public class GetInvoicesQueryHandler : IRequestHandler<GetInvoicesQuery, Result<
         _context = context;
     }
 
-    public async Task<Result<List<Invoice>>> Handle(GetInvoicesQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<Domain.Entities.Invoice>>> Handle(GetInvoicesQuery request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting handler {HandlerName}.", nameof(GetInvoicesQueryHandler));
 
         try
         {
             _logger.LogInformation("Getting list for {EntityName}. Handler: {HandlerName}.", "Invoice", nameof(GetInvoicesQueryHandler));
-            return new Result<List<Invoice>>(await _context.Invoices.ToListAsync(cancellationToken));
+            return new Result<List<Domain.Entities.Invoice>>(await _context.Invoices.ToListAsync(cancellationToken));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while handling {HandlerName}.", nameof(GetInvoicesQueryHandler));
-            return new Result<List<Invoice>>(ex);
+            return new Result<List<Domain.Entities.Invoice>>(ex);
         }
         finally
         {

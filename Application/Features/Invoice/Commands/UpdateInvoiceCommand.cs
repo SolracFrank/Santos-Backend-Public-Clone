@@ -28,4 +28,4 @@ public record UpdateInvoiceCommand(
     int? Idtaxrate,
     decimal Taxrate,
     decimal Taxamount
-) : IRequest<Result<Invoice>>;
+) : IRequest<Result<Domain.Entities.Invoice>>;

@@ -8,7 +8,7 @@ using LanguageExt.Common;
 
 namespace Application.Features.Estimates;
 
-public class GetEstimateByIdQueryHandler : IRequestHandler<GetEstimateByIdQuery, Result<Estimate?>>
+public class GetEstimateByIdQueryHandler : IRequestHandler<GetEstimateByIdQuery, Result<Domain.Entities.Estimate?>>
 {
     private readonly AppDbContext _context;
     private readonly ILogger<GetEstimateByIdQueryHandler> _logger;
@@ -19,7 +19,7 @@ public class GetEstimateByIdQueryHandler : IRequestHandler<GetEstimateByIdQuery,
         _context = context;
     }
 
-    public async Task<Result<Estimate?>> Handle(GetEstimateByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<Domain.Entities.Estimate?>> Handle(GetEstimateByIdQuery request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting handler {HandlerName}.", nameof(GetEstimateByIdQueryHandler));
 
@@ -31,15 +31,15 @@ public class GetEstimateByIdQueryHandler : IRequestHandler<GetEstimateByIdQuery,
             {
                 var notFoundException = new KeyNotFoundException("Estimate not found");
                 _logger.LogWarning(notFoundException, "{EntityName} with id {Id} was not found. Handler: {HandlerName}.", "Estimate", request.Id, nameof(GetEstimateByIdQueryHandler));
-                return new Result<Estimate?>(notFoundException);
+                return new Result<Domain.Entities.Estimate?>(notFoundException);
             }
 
-            return new Result<Estimate?>(entity);
+            return new Result<Domain.Entities.Estimate?>(entity);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while handling {HandlerName}.", nameof(GetEstimateByIdQueryHandler));
-            return new Result<Estimate?>(ex);
+            return new Result<Domain.Entities.Estimate?>(ex);
         }
         finally
         {

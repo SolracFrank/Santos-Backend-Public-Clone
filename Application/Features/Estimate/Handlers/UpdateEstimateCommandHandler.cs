@@ -7,7 +7,7 @@ using LanguageExt.Common;
 
 namespace Application.Features.Estimates;
 
-public class UpdateEstimateCommandHandler : IRequestHandler<UpdateEstimateCommand, Result<Estimate>>
+public class UpdateEstimateCommandHandler : IRequestHandler<UpdateEstimateCommand, Result<Domain.Entities.Estimate>>
 {
     private readonly AppDbContext _context;
     private readonly ILogger<UpdateEstimateCommandHandler> _logger;
@@ -18,20 +18,20 @@ public class UpdateEstimateCommandHandler : IRequestHandler<UpdateEstimateComman
         _logger = logger;
     }
 
-    public async Task<Result<Estimate>> Handle(UpdateEstimateCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Domain.Entities.Estimate>> Handle(UpdateEstimateCommand request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting handler {HandlerName}.", nameof(UpdateEstimateCommandHandler));
 
         try
         {
             if (request.Id <= 0)
-                return new Result<Estimate>(new ArgumentException("Invalid estimate id."));
+                return new Result<Domain.Entities.Estimate>(new ArgumentException("Invalid estimate id."));
 
             var entity = await _context.Estimates
                 .FirstOrDefaultAsync(x => x.Idestimate == request.Id, cancellationToken);
 
             if (entity == null)
-                return new Result<Estimate>(new KeyNotFoundException($"Estimate {request.Id} was not found."));
+                return new Result<Domain.Entities.Estimate>(new KeyNotFoundException($"Estimate {request.Id} was not found."));
 
             entity.Estimatenumber = request.Estimatenumber;
             entity.Estimatedate = request.Estimatedate;
@@ -54,12 +54,12 @@ public class UpdateEstimateCommandHandler : IRequestHandler<UpdateEstimateComman
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            return new Result<Estimate>(entity);
+            return new Result<Domain.Entities.Estimate>(entity);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while handling {HandlerName}.", nameof(UpdateEstimateCommandHandler));
-            return new Result<Estimate>(ex);
+            return new Result<Domain.Entities.Estimate>(ex);
         }
     }
 }

@@ -1,4 +1,3 @@
-using Domain.Entities;
 using Infrastructure.Data;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -7,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.Invoices;
 
-public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand, Result<Invoice>>
+public class CreateInvoiceCommandHandler
+    : IRequestHandler<CreateInvoiceCommand, Result<Domain.Entities.Invoice>>
 {
     private readonly AppDbContext _context;
     private readonly ILogger<CreateInvoiceCommandHandler> _logger;
@@ -18,83 +18,112 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
         _logger = logger;
     }
 
-    public async Task<Result<Invoice>> Handle(CreateInvoiceCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Domain.Entities.Invoice>> Handle(
+        CreateInvoiceCommand request,
+        CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting handler {HandlerName}.", nameof(CreateInvoiceCommandHandler));
-
         try
         {
-            bool existeInvoice = await _context.Invoices
-            .AnyAsync(x => x.Invoicenumber == request.Invoicenumber, cancellationToken);
-
-            if (existeInvoice)
-            {
-                return new Result<Invoice>(
-                    new InvalidOperationException(
-                        $"Invoice #{request.Invoicenumber} already exists."));
-            }
-
             if (request.Createdfromestimateid != null)
             {
-                var estimate = await _context.Estimates
-                    .FirstOrDefaultAsync(x => x.Idestimate == request.Createdfromestimateid, cancellationToken);
+                var estimate = await _context.Set<Domain.Entities.Estimate>()
+                    .FirstOrDefaultAsync(x =>
+                        x.Idestimate == request.Createdfromestimateid,
+                        cancellationToken);
 
                 if (estimate == null)
                 {
-                    return new Result<Invoice>(
+                    return new Result<Domain.Entities.Invoice>(
                         new InvalidOperationException("The estimate does not exist."));
                 }
+            }
 
-                if (estimate.Estimatenumber != request.Invoicenumber)
+            const int maxIntentos = 5;
+
+            for (int intento = 1; intento <= maxIntentos; intento++)
+            {
+                int invoiceNumber = await ObtenerNumeroSeguroAsync(
+                    request.Invoicenumber,
+                    request.Createdfromestimateid,
+                    cancellationToken);
+
+                var entity = new Domain.Entities.Invoice
                 {
-                    return new Result<Invoice>(
-                        new InvalidOperationException(
-                            $"Invoice number must match Estimate number #{estimate.Estimatenumber}."));
+                    Idinvoice = request.Idinvoice,
+                    Invoicenumber = invoiceNumber,
+                    Invoicedate = request.Invoicedate,
+                    Duedate = request.Duedate,
+                    Dteordered = request.Dteordered,
+                    Ponumber = request.Ponumber,
+                    Memo = request.Memo,
+                    Subtotal = request.Subtotal,
+                    Markup = request.Markup,
+                    Total = request.Total,
+                    Activeinvoice = request.Activeinvoice,
+                    Idusers = request.Idusers,
+                    Idterms = request.Idterms,
+                    Idrepsales = request.Idrepsales,
+                    Idcustomermessage = request.Idcustomermessage,
+                    Customermessagetext = request.Customermessagetext,
+                    Createdfromestimateid = request.Createdfromestimateid,
+                    Dateordered = request.Dateordered,
+                    Openbalance = request.Openbalance,
+                    Idtaxrate = request.Idtaxrate,
+                    Taxrate = request.Taxrate,
+                    Taxamount = request.Taxamount
+                };
+
+                _context.Set<Domain.Entities.Invoice>().Add(entity);
+
+                try
+                {
+                    await _context.SaveChangesAsync(cancellationToken);
+                    return new Result<Domain.Entities.Invoice>(entity);
+                }
+                catch (DbUpdateException ex)
+                {
+                    _context.Entry(entity).State = EntityState.Detached;
+
+                    _logger.LogWarning(
+                        ex,
+                        "Invoice number conflict. Retrying. Attempt {Attempt}.",
+                        intento);
+
+                    if (intento == maxIntentos)
+                        return new Result<Domain.Entities.Invoice>(ex);
                 }
             }
 
-            var entity = new Invoice
-            {
-                Idinvoice = request.Idinvoice,
-                Invoicenumber = request.Invoicenumber,
-                Invoicedate = request.Invoicedate,
-                Duedate = request.Duedate,
-                Dteordered = request.Dteordered,
-                Ponumber = request.Ponumber,
-                Memo = request.Memo,
-                Subtotal = request.Subtotal,
-                Markup = request.Markup,
-                Total = request.Total,
-                Activeinvoice = request.Activeinvoice,
-                Idusers = request.Idusers,
-                Idterms = request.Idterms,
-                Idrepsales = request.Idrepsales,
-                Idcustomermessage = request.Idcustomermessage,
-                Customermessagetext = request.Customermessagetext,
-                Createdfromestimateid = request.Createdfromestimateid,
-                Dateordered = request.Dateordered,
-                Openbalance = request.Openbalance,
-                Idtaxrate = request.Idtaxrate,
-                Taxrate = request.Taxrate,
-                Taxamount = request.Taxamount
-            };
-            _logger.LogInformation("Creating {EntityName}. Handler: {HandlerName}.", nameof(Invoice), nameof(CreateInvoiceCommandHandler));
-            _context.Set<Invoice>().Add(entity);
-            _logger.LogInformation("Saving changes for {HandlerName}.", nameof(CreateInvoiceCommandHandler));
-            var savedChanges = await _context.SaveChangesAsync(cancellationToken);
-            if (savedChanges <= 0)
-            {
-                var saveException = new InvalidOperationException($"No changes were saved while handling CreateInvoiceCommand.");
-                _logger.LogWarning(saveException, "No changes were saved for {HandlerName}.", nameof(CreateInvoiceCommandHandler));
-                return new Result<Invoice>(saveException);
-            }
-            _logger.LogInformation("Changes saved for {HandlerName}.", nameof(CreateInvoiceCommandHandler));
-            return new Result<Invoice>(entity);
+            return new Result<Domain.Entities.Invoice>(
+                new InvalidOperationException("Could not create invoice after several attempts."));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while handling {HandlerName}.", nameof(CreateInvoiceCommandHandler));
-            return new Result<Invoice>(ex);
+            return new Result<Domain.Entities.Invoice>(ex);
         }
+    }
+
+    private async Task<int> ObtenerNumeroSeguroAsync(
+        int numeroSolicitado,
+        int? createdFromEstimateId,
+        CancellationToken cancellationToken)
+    {
+        if (createdFromEstimateId.HasValue)
+            return numeroSolicitado;
+
+        if (numeroSolicitado > 0)
+        {
+            bool exists = await _context.Set<Domain.Entities.Invoice>()
+                .AnyAsync(x => x.Invoicenumber == numeroSolicitado, cancellationToken);
+
+            if (!exists)
+                return numeroSolicitado;
+        }
+
+        int lastNumber = await _context.Set<Domain.Entities.Invoice>()
+            .MaxAsync(x => (int?)x.Invoicenumber, cancellationToken) ?? 0;
+
+        return lastNumber + 1;
     }
 }

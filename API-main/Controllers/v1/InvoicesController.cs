@@ -4,6 +4,7 @@ using EsApi.Controllers;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
+using Application.Features.Invoice.Queries;
 
 namespace EsApi.Controllers.v1;
 
@@ -28,6 +29,21 @@ public class InvoicesController : BaseApiController
     public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
         return await SendAsync(new GetInvoiceByIdQuery(id), cancellationToken);
+    }
+
+    [HttpGet("by-estimate/{idEstimate:int}")]
+    [SwaggerOperation(
+    Summary = "Gets an invoice by estimate id.",
+    Description = "Returns the invoice created from the provided estimate id.")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Returns the invoice.", typeof(InvoiceDto))]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "The invoice was not found.")]
+    public async Task<IActionResult> GetByEstimateId(
+    int idEstimate,
+    CancellationToken cancellationToken)
+    {
+        return await SendAsync(
+            new GetInvoiceByEstimateIdQuery(idEstimate),
+            cancellationToken);
     }
 
     [HttpPost]
@@ -58,5 +74,11 @@ public class InvoicesController : BaseApiController
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         return await SendOkAsync(new DeleteInvoiceCommand(id), cancellationToken);
+    }
+
+    [HttpGet("next-number")]
+    public async Task<IActionResult> GetNextNumber(CancellationToken cancellationToken)
+    {
+        return await SendAsync(new GetNextInvoiceNumberQuery(), cancellationToken);
     }
 }

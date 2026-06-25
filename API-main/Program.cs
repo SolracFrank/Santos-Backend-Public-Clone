@@ -97,7 +97,7 @@ app.UseMiddleware<UnhandledExceptionMiddleware>();
 app.UseHttpLogging();
 
 
-if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
+if (app.Environment.IsDevelopment())
 {
     var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
 
@@ -125,11 +125,11 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
     });
 }
 
-//app.UseHttpsRedirection();
-
-app.UseAuthorization();
+app.UseHttpsRedirection();
 
 app.UseSerilogRequestLogging();
+
+app.UseAuthorization();
 
 app.MapControllers();
 
