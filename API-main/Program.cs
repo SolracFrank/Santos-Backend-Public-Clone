@@ -6,6 +6,8 @@ using EsApi.Filters;
 using EsApi.Middlewares;
 using EsApi.Swagger;
 using Infrastructure;
+using Infrastructure.Data;
+using Infrastructure.Security;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.Options;
 using Serilog;
@@ -92,10 +94,20 @@ builder.Services.AddApplication();
 
 var app = builder.Build();
 
-app.UseMiddleware<CorrelationIdMiddleware>();
-app.UseMiddleware<UnhandledExceptionMiddleware>();
-app.UseHttpLogging();
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
+    await DefaultAdminSeeder.SeedAsync(context);
+}
+
+app.UseMiddleware<CorrelationIdMiddleware>();
+
+app.UseSerilogRequestLogging();
+
+app.UseMiddleware<UnhandledExceptionMiddleware>();
+
+app.UseHttpLogging();
 
 if (app.Environment.IsDevelopment())
 {
@@ -106,7 +118,9 @@ if (app.Environment.IsDevelopment())
     {
         foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
         {
-            options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+            options.SwaggerEndpoint(
+                $"/swagger/{description.GroupName}/swagger.json",
+                description.GroupName.ToUpperInvariant());
         }
 
         options.DocumentTitle = "Swagger - Operations API";
@@ -127,7 +141,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseSerilogRequestLogging();
+app.UseAuthentication();
 
 app.UseAuthorization();
 

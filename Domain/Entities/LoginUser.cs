@@ -28,6 +28,6 @@ namespace Domain.Entities
 
         public bool CanManagePermissions { get; set; }
 
-        public string SecurityStamp { get; set; } = null!;
+        public Guid SecurityStamp { get; set; }
     }
 }

@@ -30,7 +30,7 @@ namespace Infrastructure.Security
 
             new Claim(ClaimTypes.Role, user.UserRole),
 
-            new Claim("SecurityStamp", user.SecurityStamp)
+            new Claim("SecurityStamp", user.SecurityStamp.ToString())
             };
             var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_jwtConfiguration.SecretKey));
