@@ -20,19 +20,24 @@ namespace Infrastructure.Repositories
                 .SingleOrDefaultAsync(x => x.Username == username);
         }
 
-        public Task<LoginUser?> GetByIdAsync(int idLoginUser)
+        public async Task<LoginUser?> GetByIdAsync(int idLoginUser)
         {
-            throw new NotImplementedException();
+            return await _context.LoginUsers
+                .FirstOrDefaultAsync(x => x.Idloginuser == idLoginUser);
         }
 
-        public Task<List<LoginUser>> GetAllAsync()
+        public async Task<List<LoginUser>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _context.LoginUsers
+                .OrderBy(x => x.Username)
+                .ToListAsync();
         }
 
-        public Task AddAsync(LoginUser user)
+        public async Task AddAsync(LoginUser user)
         {
-            throw new NotImplementedException();
+            _context.LoginUsers.Add(user);
+
+            await _context.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(LoginUser user)

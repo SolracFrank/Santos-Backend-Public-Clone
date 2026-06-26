@@ -28,6 +28,22 @@ namespace Domain.Entities
 
         public bool CanManagePermissions { get; set; }
 
+        public bool CanManageItems { get; set; }
+
+        public bool CanDeleteItems { get; set; }
+
         public Guid SecurityStamp { get; set; }
+
+        public void GrantAdministratorPermissions()
+        {
+            CanCreateUsers = true;
+            CanEditUsers = true;
+            CanDisableUsers = true;
+            CanViewAuditLog = true;
+            CanManagePermissions = true;
+
+            CanManageItems = true;
+            CanDeleteItems = true;
+        }
     }
 }

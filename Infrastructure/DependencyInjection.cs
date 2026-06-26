@@ -94,7 +94,10 @@ public static class DependencyInjection
 
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
         builder.Services.AddScoped<IAuditService, AuditService>();
+        builder.Services.AddScoped<IPermissionService, PermissionService>();
 
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
         return builder;
     }
 }

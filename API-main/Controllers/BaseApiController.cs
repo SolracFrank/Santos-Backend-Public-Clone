@@ -3,11 +3,13 @@
 using Domain.Exceptions;
 using LanguageExt.Common;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
 
 
 [ApiController]
+[Authorize]
 [Produces("application/json")]
 [Route("api/v{version:apiVersion}/[controller]")]
 public abstract class BaseApiController : ControllerBase

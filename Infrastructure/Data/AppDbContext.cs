@@ -157,6 +157,12 @@ public partial class AppDbContext : DbContext
 
             entity.Property(e => e.CanManagePermissions)
                 .IsRequired();
+
+            entity.Property(e => e.CanManageItems)
+                .IsRequired();
+
+            entity.Property(e => e.CanDeleteItems)
+                .IsRequired();
         });
 
         modelBuilder.Entity<Attachment>(entity =>

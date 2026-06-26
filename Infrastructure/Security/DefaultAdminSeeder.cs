@@ -25,14 +25,10 @@ namespace Infrastructure.Security
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 LastLogin = null,
-                SecurityStamp = Guid.NewGuid(),
-
-                CanCreateUsers = true,
-                CanEditUsers = true,
-                CanDisableUsers = true,
-                CanViewAuditLog = true,
-                CanManagePermissions = true
+                SecurityStamp = Guid.NewGuid()
             };
+
+            admin.GrantAdministratorPermissions();
 
             context.LoginUsers.Add(admin);
 

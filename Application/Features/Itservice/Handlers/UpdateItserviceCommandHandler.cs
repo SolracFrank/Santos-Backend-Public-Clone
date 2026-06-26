@@ -4,6 +4,8 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using LanguageExt.Common;
+using Domain.Common.Security;
+using Domain.Exceptions;
 
 namespace Application.Features.Itservices;
 
@@ -11,11 +13,19 @@ public class UpdateItserviceCommandHandler : IRequestHandler<UpdateItserviceComm
 {
     private readonly AppDbContext _context;
     private readonly ILogger<UpdateItserviceCommandHandler> _logger;
+    private readonly IPermissionService _permissionService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public UpdateItserviceCommandHandler(AppDbContext context, ILogger<UpdateItserviceCommandHandler> logger)
+    public UpdateItserviceCommandHandler(
+    AppDbContext context,
+    ILogger<UpdateItserviceCommandHandler> logger,
+    IPermissionService permissionService,
+    ICurrentUserService currentUserService)
     {
         _context = context;
         _logger = logger;
+        _permissionService = permissionService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<Itservice>> Handle(UpdateItserviceCommand request, CancellationToken cancellationToken)
@@ -24,6 +34,15 @@ public class UpdateItserviceCommandHandler : IRequestHandler<UpdateItserviceComm
 
         try
         {
+            var canManageItems = await _permissionService.CanManageItemsAsync(
+            _currentUserService.IdLoginUser);
+
+            if (!canManageItems)
+            {
+                throw new ForbiddenException(
+                    "You do not have permission to update items.",
+                    "ITEM_UPDATE_FORBIDDEN");
+            }
             if (request.Id != request.Iditem)
                 throw new ArgumentException("Id mismatch");
 

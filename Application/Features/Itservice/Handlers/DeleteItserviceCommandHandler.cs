@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Domain.Entities;
 using LanguageExt.Common;
+using Domain.Common.Security;
+using Domain.Exceptions;
 
 namespace Application.Features.Itservices;
 
@@ -13,11 +15,19 @@ public class DeleteItserviceCommandHandler : IRequestHandler<DeleteItserviceComm
 {
     private readonly AppDbContext _context;
     private readonly ILogger<DeleteItserviceCommandHandler> _logger;
+    private readonly IPermissionService _permissionService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public DeleteItserviceCommandHandler(AppDbContext context, ILogger<DeleteItserviceCommandHandler> logger)
+    public DeleteItserviceCommandHandler(
+     AppDbContext context,
+     ILogger<DeleteItserviceCommandHandler> logger,
+     IPermissionService permissionService,
+     ICurrentUserService currentUserService)
     {
         _logger = logger;
         _context = context;
+        _permissionService = permissionService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<Unit>> Handle(DeleteItserviceCommand request, CancellationToken cancellationToken)
@@ -26,6 +36,15 @@ public class DeleteItserviceCommandHandler : IRequestHandler<DeleteItserviceComm
 
         try
         {
+            var canDeleteItems = await _permissionService.CanDeleteItemsAsync(
+                _currentUserService.IdLoginUser);
+
+            if (!canDeleteItems)
+            {
+                throw new ForbiddenException(
+                    "You do not have permission to delete items.",
+                    "ITEM_DELETE_FORBIDDEN");
+            }
             var item = await _context.Itservices.FindAsync(new object[] { request.Id }, cancellationToken);
             if (item == null)
             {
@@ -35,6 +54,7 @@ public class DeleteItserviceCommandHandler : IRequestHandler<DeleteItserviceComm
             _logger.LogInformation("Deleting {EntityName} with id {Id}. Handler: {HandlerName}.", "Itservice", request.Id, nameof(DeleteItserviceCommandHandler));
             _context.Itservices.Remove(item);
             _logger.LogInformation("Saving changes for {HandlerName}.", nameof(DeleteItserviceCommandHandler));
+
             var savedChanges = await _context.SaveChangesAsync(cancellationToken);
             if (savedChanges <= 0)
             {
