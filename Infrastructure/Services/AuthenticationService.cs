@@ -47,7 +47,9 @@ namespace Infrastructure.Services
                 throw new UnauthorizedAccessException("Invalid username or password.");
             }
 
-            var passwordIsValid = _passwordHasher.VerifyPassword(request.Password,user.PasswordHash);
+            var passwordIsValid = _passwordHasher.VerifyPassword(
+                request.Password,
+                user.PasswordHash);
             if (!passwordIsValid)
             {
                 await _auditService.LogAsync(new AuditLogDto
