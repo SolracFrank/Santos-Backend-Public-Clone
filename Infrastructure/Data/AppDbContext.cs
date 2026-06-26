@@ -64,6 +64,10 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<EmailHistory> EmailHistories { get; set; }
 
+    public DbSet<LoginUser> LoginUsers { get; set; }
+
+    public virtual DbSet<AuditLog> AuditLogs { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new EmailHistoryConfiguration());
@@ -72,21 +76,50 @@ public partial class AppDbContext : DbContext
 
         OnModelCreatingPartial(modelBuilder);
 
-        modelBuilder.Entity<Attachment>(entity =>
+        modelBuilder.Entity<AuditLog>(entity =>
         {
-            entity.HasKey(e => e.Idattachment);
+            entity.HasKey(e => e.Idauditlog);
 
-            entity.Property(e => e.EntityType)
-                .HasMaxLength(20)
+            entity.Property(e => e.Action)
+                .HasMaxLength(100)
                 .IsRequired();
 
-            entity.Property(e => e.FileName)
-                .HasMaxLength(255)
-                .IsRequired();
+            entity.Property(e => e.EntityName)
+                .HasMaxLength(100);
 
-            entity.Property(e => e.FilePath)
-                .HasMaxLength(500)
+            entity.Property(e => e.EntityId)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.Username)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.IpAddress)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.PerformedByRole)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.Description)
+                .HasMaxLength(1000);
+
+            entity.Property(e => e.Severity)
+                .HasConversion<string>()   
+                .HasMaxLength(20);
+
+            entity.Property(e => e.CreatedAt)
                 .IsRequired();
+        });
+
+
+        modelBuilder.Entity<LoginUser>(entity =>
+        {
+            entity.Property(e => e.UserRole)
+            .HasMaxLength(50)
+            .IsRequired();
+
+            entity.Property(e => e.SecurityStamp)
+            .HasMaxLength(36)
+            .IsRequired();
         });
     }
 

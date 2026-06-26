@@ -1,14 +1,17 @@
 ﻿namespace Infrastructure;
 
+using Domain.Common.Audit;
+using Domain.Common.Security;
 using Domain.Models.ConfigurationModels;
 using Infrastructure.Data;
+using Infrastructure.Repositories;
+using Infrastructure.Security;
 using Infrastructure.Services;
 using Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-
 public static class DependencyInjection
 {
     public static WebApplicationBuilder AddInfrastructure(this WebApplicationBuilder builder)
@@ -38,9 +41,21 @@ public static class DependencyInjection
                 "EmailAttachments:AllowedExtensions contains an unsupported extension.")
             .ValidateOnStart();
 
+        // Configuration
+        builder.Services.Configure<JwtConfiguration>(
+            builder.Configuration.GetSection(JwtConfiguration.SectionName));
+
         // Services
         builder.Services.AddTransient<IEmailService, OutlookGraphEmailService>();
 
+        builder.Services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
+        builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+
+        builder.Services.AddScoped<ILoginUserRepository, LoginUserRepository>();
+        builder.Services.AddScoped<IAuditRepository, AuditRepository>();
+
+        builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+        builder.Services.AddScoped<IAuditService, AuditService>();
 
         return builder;
     }

@@ -26,6 +26,7 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
 		<PackageReference Include="Microsoft.Graph" />
 		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" />
 	</ItemGroup>
 
 </Project>
