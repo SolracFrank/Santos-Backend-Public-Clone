@@ -10,7 +10,7 @@ public partial class AppDbContext : DbContext
         : base(options)
     {
     }
-    public DbSet<Attachment> Attachments { get; set; }
+    public virtual DbSet<Attachment> Attachments { get; set; }
 
     public virtual DbSet<Account> Accounts { get; set; }
 
@@ -18,9 +18,13 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Address> Addresses { get; set; }
 
+    public virtual DbSet<AuditLog> AuditLogs { get; set; }
+
     public virtual DbSet<Customer> Customers { get; set; }
 
     public virtual DbSet<Customermessage> Customermessages { get; set; }
+
+    public virtual DbSet<EmailHistory> EmailHistories { get; set; }
 
     public virtual DbSet<Employee> Employees { get; set; }
 
@@ -42,6 +46,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Jobtype> Jobtypes { get; set; }
 
+    public virtual DbSet<LoginUser> LoginUsers { get; set; }
+
     public virtual DbSet<Othername> Othernames { get; set; }
 
     public virtual DbSet<Paymd> Paymds { get; set; }
@@ -62,8 +68,6 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<TaxRate> TaxRates { get; set; }
 
-    public virtual DbSet<EmailHistory> EmailHistories { get; set; }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new EmailHistoryConfiguration());
@@ -72,9 +76,103 @@ public partial class AppDbContext : DbContext
 
         OnModelCreatingPartial(modelBuilder);
 
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.HasKey(e => e.Idauditlog);
+
+            entity.Property(e => e.Action)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.EntityName)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.EntityId)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.Username)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.IpAddress)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.PerformedByRole)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.Description)
+                .HasMaxLength(1000);
+
+            entity.Property(e => e.Severity)
+                .HasConversion<string>()   
+                .HasMaxLength(20);
+
+            entity.Property(e => e.CreatedAt)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<LoginUser>(entity =>
+        {
+            entity.ToTable("LoginUsers");
+
+            entity.HasKey(e => e.Idloginuser);
+
+            entity.Property(e => e.Idloginuser)
+                .HasColumnName("Idloginuser");
+
+            entity.Property(e => e.Username)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(e => e.PasswordHash)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(e => e.UserRole)
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(e => e.SecurityStamp)
+                .HasColumnType("char(36)")
+                .IsRequired();
+
+            entity.Property(e => e.IsActive)
+                .IsRequired();
+
+            entity.Property(e => e.CreatedAt)
+                .IsRequired();
+
+            entity.Property(e => e.LastLogin);
+
+            entity.Property(e => e.CanCreateUsers)
+                .IsRequired();
+
+            entity.Property(e => e.CanEditUsers)
+                .IsRequired();
+
+            entity.Property(e => e.CanDisableUsers)
+                .IsRequired();
+
+            entity.Property(e => e.CanViewAuditLog)
+                .IsRequired();
+
+            entity.Property(e => e.CanManagePermissions)
+                .IsRequired();
+
+            entity.Property(e => e.CanManageItems)
+                .IsRequired();
+
+            entity.Property(e => e.CanDeleteItems)
+                .IsRequired();
+        });
+
         modelBuilder.Entity<Attachment>(entity =>
         {
+            entity.ToTable("Attachments");
+
             entity.HasKey(e => e.Idattachment);
+
+            entity.Property(e => e.Idattachment)
+                .HasColumnName("Idattachment");
 
             entity.Property(e => e.EntityType)
                 .HasMaxLength(20)

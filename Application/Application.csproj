@@ -21,4 +21,8 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
 		<PackageReference Include="Microsoft.Graph" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Features\LoginUsers\Validators\" />
+	</ItemGroup>
 </Project>

@@ -2,13 +2,14 @@ using Application.Features.Users;
 using Domain.Entities.Dtos;
 using EsApi.Controllers;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
-
 namespace EsApi.Controllers.v1;
 
 public class UsersController : BaseApiController
 {
+    
     public UsersController(IMediator mediator) : base(mediator)
     {
     }

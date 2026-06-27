@@ -3,6 +3,8 @@ using Infrastructure.Data;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using LanguageExt.Common;
+using Domain.Common.Security;
+using Domain.Exceptions;
 
 namespace Application.Features.Itservices;
 
@@ -10,11 +12,19 @@ public class CreateItserviceCommandHandler : IRequestHandler<CreateItserviceComm
 {
     private readonly AppDbContext _context;
     private readonly ILogger<CreateItserviceCommandHandler> _logger;
+    private readonly IPermissionService _permissionService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public CreateItserviceCommandHandler(AppDbContext context, ILogger<CreateItserviceCommandHandler> logger)
+    public CreateItserviceCommandHandler(
+     AppDbContext context,
+     ILogger<CreateItserviceCommandHandler> logger,
+     IPermissionService permissionService,
+     ICurrentUserService currentUserService)
     {
         _context = context;
         _logger = logger;
+        _permissionService = permissionService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<Itservice>> Handle(CreateItserviceCommand request, CancellationToken cancellationToken)
@@ -23,6 +33,16 @@ public class CreateItserviceCommandHandler : IRequestHandler<CreateItserviceComm
 
         try
         {
+            var canManageItems = await _permissionService.CanManageItemsAsync(
+            _currentUserService.IdLoginUser);
+
+            if (!canManageItems)
+            {
+                throw new ForbiddenException(
+                    "You do not have permission to create items.",
+                    "ITEM_CREATE_FORBIDDEN");
+            }
+
             var entity = new Itservice
             {
                 Iditem = request.Iditem,
