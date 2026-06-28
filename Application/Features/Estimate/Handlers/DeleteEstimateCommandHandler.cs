@@ -6,6 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Domain.Entities;
 using LanguageExt.Common;
+using Domain.Common.Audit;
+using Domain.Common.Security;
+using Domain.Entities.Dtos;
 
 namespace Application.Features.Estimates;
 
@@ -13,11 +16,19 @@ public class DeleteEstimateCommandHandler : IRequestHandler<DeleteEstimateComman
 {
     private readonly AppDbContext _context;
     private readonly ILogger<DeleteEstimateCommandHandler> _logger;
+    private readonly IAuditService _auditService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public DeleteEstimateCommandHandler(AppDbContext context, ILogger<DeleteEstimateCommandHandler> logger)
+    public DeleteEstimateCommandHandler(
+        AppDbContext context,
+        ILogger<DeleteEstimateCommandHandler> logger,
+        IAuditService auditService,
+        ICurrentUserService currentUserService)
     {
         _logger = logger;
         _context = context;
+        _auditService = auditService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<Unit>> Handle(DeleteEstimateCommand request, CancellationToken cancellationToken)
@@ -38,6 +49,7 @@ public class DeleteEstimateCommandHandler : IRequestHandler<DeleteEstimateComman
 
             _logger.LogInformation("Saving changes for {HandlerName}.", nameof(DeleteEstimateCommandHandler));
             var savedChanges = await _context.SaveChangesAsync(cancellationToken);
+
             if (savedChanges <= 0)
             {
                 var saveException = new InvalidOperationException($"No changes were saved while handling DeleteEstimateCommand.");
@@ -45,6 +57,18 @@ public class DeleteEstimateCommandHandler : IRequestHandler<DeleteEstimateComman
                 return new Result<Unit>(saveException);
             }
             _logger.LogInformation("Changes saved for {HandlerName}.", nameof(DeleteEstimateCommandHandler));
+            await _auditService.LogAsync(new AuditLogDto
+            {
+                IdLoginUser = _currentUserService.IdLoginUser,
+                Username = _currentUserService.Username,
+                Action = AuditActions.EstimateDeleted,
+                EntityName = "Estimates",
+                EntityId = item.Idestimate.ToString(),
+                Description = $"Deleted estimate #{item.Estimatenumber}.",
+                PerformedByRole = _currentUserService.UserRole,
+                Succeeded = true,
+                Severity = AuditSeverity.Information
+            });
             return new Result<Unit>(Unit.Value);
         }
         catch (Exception ex)

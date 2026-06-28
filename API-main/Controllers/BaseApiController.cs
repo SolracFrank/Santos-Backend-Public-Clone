@@ -6,10 +6,11 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
-
+using Microsoft.AspNetCore.RateLimiting;
 
 [ApiController]
 [Authorize]
+[EnableRateLimiting("DefaultPolicy")]
 [Produces("application/json")]
 [Route("api/v{version:apiVersion}/[controller]")]
 public abstract class BaseApiController : ControllerBase

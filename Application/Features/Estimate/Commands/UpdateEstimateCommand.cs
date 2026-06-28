@@ -23,5 +23,6 @@ public record UpdateEstimateCommand(
     int? Idcustomermessage,
     string? Customermessagetext,
     bool IsCopy,
-    int? CopiedFromEstimateId
+    int? CopiedFromEstimateId,
+    DateTime LastModifiedUtc
 ) : IRequest<Result<Domain.Entities.Estimate>>;

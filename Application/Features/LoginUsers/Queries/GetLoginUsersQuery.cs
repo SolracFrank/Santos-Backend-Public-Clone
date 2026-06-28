@@ -6,5 +6,6 @@ namespace Application.Features.LoginUsers.Queries
 {
     public class GetLoginUsersQuery : IRequest<Result<List<LoginUserDto>>>
     {
+
     }
 }

@@ -49,6 +49,8 @@ public partial class Invoice
 
     public decimal Taxamount { get; set; }
 
+    public DateTime LastModifiedUtc { get; set; }
+
     public virtual TaxRate? IdtaxrateNavigation { get; set; }
 
     public virtual ICollection<Invoicedetail> Invoicedetails { get; set; } = new List<Invoicedetail>();

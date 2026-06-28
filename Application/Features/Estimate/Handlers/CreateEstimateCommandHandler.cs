@@ -3,6 +3,9 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using LanguageExt.Common;
 using Microsoft.EntityFrameworkCore;
+using Domain.Common.Audit;
+using Domain.Common.Security;
+using Domain.Entities.Dtos;
 
 namespace Application.Features.Estimates;
 
@@ -11,11 +14,19 @@ public class CreateEstimateCommandHandler
 {
     private readonly AppDbContext _context;
     private readonly ILogger<CreateEstimateCommandHandler> _logger;
+    private readonly IAuditService _auditService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public CreateEstimateCommandHandler(AppDbContext context, ILogger<CreateEstimateCommandHandler> logger)
+    public CreateEstimateCommandHandler(
+        AppDbContext context,
+        ILogger<CreateEstimateCommandHandler> logger,
+        IAuditService auditService,
+        ICurrentUserService currentUserService)
     {
         _context = context;
         _logger = logger;
+        _auditService = auditService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<Domain.Entities.Estimate>> Handle(
@@ -50,7 +61,9 @@ public class CreateEstimateCommandHandler
                     Idcustomermessage = request.Idcustomermessage,
                     Customermessagetext = request.Customermessagetext,
                     IsCopy = request.IsCopy,
-                    CopiedFromEstimateId = request.CopiedFromEstimateId
+                    CopiedFromEstimateId = request.CopiedFromEstimateId,
+
+                    LastModifiedUtc = DateTime.UtcNow
                 };
 
                 _context.Set<Domain.Entities.Estimate>().Add(entity);
@@ -58,6 +71,18 @@ public class CreateEstimateCommandHandler
                 try
                 {
                     await _context.SaveChangesAsync(cancellationToken);
+                    await _auditService.LogAsync(new AuditLogDto
+                    {
+                        IdLoginUser = _currentUserService.IdLoginUser,
+                        Username = _currentUserService.Username,
+                        Action = AuditActions.EstimateCreated,
+                        EntityName = "Estimates",
+                        EntityId = entity.Idestimate.ToString(),
+                        Description = $"Created estimate #{entity.Estimatenumber}.",
+                        PerformedByRole = _currentUserService.UserRole,
+                        Succeeded = true,
+                        Severity = AuditSeverity.Information
+                    });
                     return new Result<Domain.Entities.Estimate>(entity);
                 }
                 catch (DbUpdateException ex)

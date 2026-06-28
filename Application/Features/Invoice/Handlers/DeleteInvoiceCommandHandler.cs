@@ -6,6 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Domain.Entities;
 using LanguageExt.Common;
+using Domain.Common.Audit;
+using Domain.Common.Security;
+using Domain.Entities.Dtos;
 
 namespace Application.Features.Invoices;
 
@@ -13,11 +16,19 @@ public class DeleteInvoiceCommandHandler : IRequestHandler<DeleteInvoiceCommand,
 {
     private readonly AppDbContext _context;
     private readonly ILogger<DeleteInvoiceCommandHandler> _logger;
+    private readonly IAuditService _auditService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public DeleteInvoiceCommandHandler(AppDbContext context, ILogger<DeleteInvoiceCommandHandler> logger)
+    public DeleteInvoiceCommandHandler(
+    AppDbContext context,
+    ILogger<DeleteInvoiceCommandHandler> logger,
+    IAuditService auditService,
+    ICurrentUserService currentUserService)
     {
         _logger = logger;
         _context = context;
+        _auditService = auditService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<Unit>> Handle(DeleteInvoiceCommand request, CancellationToken cancellationToken)
@@ -44,6 +55,20 @@ public class DeleteInvoiceCommandHandler : IRequestHandler<DeleteInvoiceCommand,
                 return new Result<Unit>(saveException);
             }
             _logger.LogInformation("Changes saved for {HandlerName}.", nameof(DeleteInvoiceCommandHandler));
+
+            await _auditService.LogAsync(new AuditLogDto
+            {
+                IdLoginUser = _currentUserService.IdLoginUser,
+                Username = _currentUserService.Username,
+                Action = AuditActions.InvoiceDeleted,
+                EntityName = "Invoices",
+                EntityId = item.Idinvoice.ToString(),
+                Description = $"Deleted invoice #{item.Invoicenumber}.",
+                PerformedByRole = _currentUserService.UserRole,
+                Succeeded = true,
+                Severity = AuditSeverity.Warning
+            });
+
             return new Result<Unit>(Unit.Value);
         }
         catch (Exception ex)

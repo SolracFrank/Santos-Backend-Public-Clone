@@ -3,6 +3,9 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using LanguageExt.Common;
 using Microsoft.EntityFrameworkCore;
+using Domain.Common.Audit;
+using Domain.Common.Security;
+using Domain.Entities.Dtos;
 
 namespace Application.Features.Invoices;
 
@@ -11,11 +14,19 @@ public class CreateInvoiceCommandHandler
 {
     private readonly AppDbContext _context;
     private readonly ILogger<CreateInvoiceCommandHandler> _logger;
+    private readonly IAuditService _auditService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public CreateInvoiceCommandHandler(AppDbContext context, ILogger<CreateInvoiceCommandHandler> logger)
+    public CreateInvoiceCommandHandler(
+        AppDbContext context,
+        ILogger<CreateInvoiceCommandHandler> logger,
+        IAuditService auditService,
+        ICurrentUserService currentUserService)
     {
         _context = context;
         _logger = logger;
+        _auditService = auditService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<Domain.Entities.Invoice>> Handle(
@@ -70,7 +81,8 @@ public class CreateInvoiceCommandHandler
                     Openbalance = request.Openbalance,
                     Idtaxrate = request.Idtaxrate,
                     Taxrate = request.Taxrate,
-                    Taxamount = request.Taxamount
+                    Taxamount = request.Taxamount,
+                    LastModifiedUtc = DateTime.UtcNow
                 };
 
                 _context.Set<Domain.Entities.Invoice>().Add(entity);
@@ -78,6 +90,44 @@ public class CreateInvoiceCommandHandler
                 try
                 {
                     await _context.SaveChangesAsync(cancellationToken);
+                    if (entity.Createdfromestimateid.HasValue)
+                    {
+                        var estimate = await _context.Set<Domain.Entities.Estimate>()
+                            .FirstOrDefaultAsync(x =>
+                                x.Idestimate == entity.Createdfromestimateid.Value,
+                                cancellationToken);
+
+                        await _auditService.LogAsync(new AuditLogDto
+                        {
+                            IdLoginUser = _currentUserService.IdLoginUser,
+                            Username = _currentUserService.Username,
+                            Action = AuditActions.EstimateConverted,
+                            EntityName = "Invoices",
+                            EntityId = entity.Idinvoice.ToString(),
+                            Description = estimate == null
+                                ? $"Created invoice #{entity.Invoicenumber} from estimate."
+                                : $"Converted estimate #{estimate.Estimatenumber} to invoice #{entity.Invoicenumber}.",
+                            PerformedByRole = _currentUserService.UserRole,
+                            Succeeded = true,
+                            Severity = AuditSeverity.Information
+                        });
+                    }
+                    else
+                    {
+                        await _auditService.LogAsync(new AuditLogDto
+                        {
+                            IdLoginUser = _currentUserService.IdLoginUser,
+                            Username = _currentUserService.Username,
+                            Action = AuditActions.InvoiceCreated,
+                            EntityName = "Invoices",
+                            EntityId = entity.Idinvoice.ToString(),
+                            Description = $"Created invoice #{entity.Invoicenumber}.",
+                            PerformedByRole = _currentUserService.UserRole,
+                            Succeeded = true,
+                            Severity = AuditSeverity.Information
+                        });
+                    }
+
                     return new Result<Domain.Entities.Invoice>(entity);
                 }
                 catch (DbUpdateException ex)

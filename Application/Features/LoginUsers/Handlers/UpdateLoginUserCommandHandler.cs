@@ -1,11 +1,13 @@
 ﻿using Application.Features.LoginUsers.Commands;
 using Application.Features.LoginUsers.Mappers;
+using Domain.Common.Audit;
 using Domain.Common.Security;
 using Domain.Entities.Dtos;
 using Domain.Exceptions;
 using LanguageExt.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Microsoft.Graph.Models;
 
 namespace Application.Features.LoginUsers.Handlers;
 
@@ -16,17 +18,20 @@ public class UpdateLoginUserCommandHandler
     private readonly ILogger<UpdateLoginUserCommandHandler> _logger;
     private readonly IPermissionService _permissionService;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IAuditService _auditService;
 
     public UpdateLoginUserCommandHandler(
         ILoginUserRepository loginUserRepository,
         ILogger<UpdateLoginUserCommandHandler> logger,
         IPermissionService permissionService,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IAuditService auditService)
     {
         _loginUserRepository = loginUserRepository;
         _logger = logger;
         _permissionService = permissionService;
         _currentUserService = currentUserService;
+        _auditService = auditService;
     }
 
     public async Task<Result<LoginUserDto>> Handle(
@@ -92,6 +97,18 @@ public class UpdateLoginUserCommandHandler
             }
 
             await _loginUserRepository.UpdateAsync(user);
+            await _auditService.LogAsync(new AuditLogDto
+            {
+                IdLoginUser = _currentUserService.IdLoginUser,
+                Username = _currentUserService.Username,
+                Action = AuditActions.UserUpdated,
+                EntityName = "LoginUsers",
+                EntityId = user.Idloginuser.ToString(),
+                Description = $"Updated user '{user.Username}'.",
+                PerformedByRole = _currentUserService.UserRole,
+                Succeeded = true,
+                Severity = AuditSeverity.Information
+            });
 
             _logger.LogInformation(
                 "Login user {Username} updated successfully.",

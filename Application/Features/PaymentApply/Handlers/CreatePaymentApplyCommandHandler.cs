@@ -3,6 +3,10 @@ using Infrastructure.Data;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using LanguageExt.Common;
+using Domain.Common.Audit;
+using Domain.Common.Security;
+using Domain.Entities.Dtos;
+using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.PaymentApplies;
 
@@ -10,11 +14,19 @@ public class CreatePaymentApplyCommandHandler : IRequestHandler<CreatePaymentApp
 {
     private readonly AppDbContext _context;
     private readonly ILogger<CreatePaymentApplyCommandHandler> _logger;
+    private readonly IAuditService _auditService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public CreatePaymentApplyCommandHandler(AppDbContext context, ILogger<CreatePaymentApplyCommandHandler> logger)
+    public CreatePaymentApplyCommandHandler(
+        AppDbContext context,
+        ILogger<CreatePaymentApplyCommandHandler> logger,
+        IAuditService auditService,
+        ICurrentUserService currentUserService)
     {
         _context = context;
         _logger = logger;
+        _auditService = auditService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<PaymentApply>> Handle(CreatePaymentApplyCommand request, CancellationToken cancellationToken)
@@ -41,7 +53,38 @@ public class CreatePaymentApplyCommandHandler : IRequestHandler<CreatePaymentApp
                 return new Result<PaymentApply>(saveException);
             }
             _logger.LogInformation("Changes saved for {HandlerName}.", nameof(CreatePaymentApplyCommandHandler));
-            return new Result<PaymentApply>(entity);
+
+            var payment = await _context.Payments
+    .FirstOrDefaultAsync(x => x.Idpayment == entity.Idpayment, cancellationToken);
+
+            var invoice = await _context.Invoices
+                .FirstOrDefaultAsync(x => x.Idinvoice == entity.Idinvoice, cancellationToken);
+
+            await _auditService.LogAsync(new AuditLogDto
+            {
+                IdLoginUser = _currentUserService.IdLoginUser,
+                Username = _currentUserService.Username,
+                Action = AuditActions.PaymentApplied,
+                EntityName = "PaymentApplies",
+                EntityId = entity.Idpaymentapply.ToString(),
+                Description =
+                    invoice == null || payment == null
+                        ? $"Applied payment amount {entity.AmountApplied:C2}."
+                        : $"Applied {entity.AmountApplied:C2} from payment #{payment.Paymentnumber} to invoice #{invoice.Invoicenumber}.",
+                PerformedByRole = _currentUserService.UserRole,
+                Succeeded = true,
+                Severity = AuditSeverity.Information
+            });
+
+            var cleanEntity = new PaymentApply
+            {
+                Idpaymentapply = entity.Idpaymentapply,
+                Idpayment = entity.Idpayment,
+                Idinvoice = entity.Idinvoice,
+                AmountApplied = entity.AmountApplied
+            };
+
+            return new Result<PaymentApply>(cleanEntity);
         }
         catch (Exception ex)
         {

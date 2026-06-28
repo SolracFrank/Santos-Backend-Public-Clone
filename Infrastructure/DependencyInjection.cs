@@ -98,6 +98,7 @@ public static class DependencyInjection
 
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+        builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         return builder;
     }
 }

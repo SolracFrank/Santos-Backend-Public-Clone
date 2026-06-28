@@ -83,6 +83,13 @@ namespace Infrastructure.Services
                 throw new UnauthorizedAccessException("Invalid username or password.");
             }
             var response = _jwtTokenService.GenerateToken(user);
+            response.CanCreateUsers = user.CanCreateUsers;
+            response.CanEditUsers = user.CanEditUsers;
+            response.CanDisableUsers = user.CanDisableUsers;
+            response.CanViewAuditLog = user.CanViewAuditLog;
+            response.CanManagePermissions = user.CanManagePermissions;
+            response.CanManageItems = user.CanManageItems;
+            response.CanDeleteItems = user.CanDeleteItems;
             user.LastLogin = DateTime.UtcNow;
 
             await _loginUserRepository.UpdateAsync(user);

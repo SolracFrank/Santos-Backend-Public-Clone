@@ -27,5 +27,6 @@ public record UpdateInvoiceCommand(
     decimal Openbalance,
     int? Idtaxrate,
     decimal Taxrate,
-    decimal Taxamount
+    decimal Taxamount,
+    DateTime LastModifiedUtc
 ) : IRequest<Result<Domain.Entities.Invoice>>;

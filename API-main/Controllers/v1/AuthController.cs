@@ -2,6 +2,7 @@
 using Domain.Entities.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EsApi.Controllers.v1
 {
@@ -16,6 +17,8 @@ namespace EsApi.Controllers.v1
             _authenticationService = authenticationService;
         }
 
+
+        [EnableRateLimiting("LoginPolicy")]
         [AllowAnonymous]
         [HttpPost("login")]
         public async Task<ActionResult<LoginResponseDto>> Login([FromBody] LoginRequestDto request)

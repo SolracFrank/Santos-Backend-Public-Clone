@@ -165,6 +165,12 @@ public partial class AppDbContext : DbContext
                 .IsRequired();
         });
 
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.HasIndex(e => e.Paymentnumber)
+                .IsUnique();
+        });
+
         modelBuilder.Entity<Attachment>(entity =>
         {
             entity.ToTable("Attachments");
@@ -184,6 +190,18 @@ public partial class AppDbContext : DbContext
 
             entity.Property(e => e.FilePath)
                 .HasMaxLength(500)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<Estimate>(entity =>
+        {
+            entity.Property(e => e.LastModifiedUtc)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<Invoice>(entity =>
+        {
+            entity.Property(e => e.LastModifiedUtc)
                 .IsRequired();
         });
     }

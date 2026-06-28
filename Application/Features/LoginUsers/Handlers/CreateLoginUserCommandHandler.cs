@@ -1,5 +1,6 @@
 ﻿using Application.Features.LoginUsers.Commands;
 using Application.Features.LoginUsers.Mappers;
+using Domain.Common.Audit;
 using Domain.Common.Security;
 using Domain.Entities;
 using Domain.Entities.Dtos;
@@ -7,6 +8,7 @@ using Domain.Exceptions;
 using LanguageExt.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Domain.Common.Audit;
 
 namespace Application.Features.LoginUsers.Handlers;
 
@@ -18,20 +20,22 @@ public class CreateLoginUserCommandHandler
     private readonly ILogger<CreateLoginUserCommandHandler> _logger;
     private readonly IPermissionService _permissionService;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IAuditService _auditService;
 
     public CreateLoginUserCommandHandler(
         ILoginUserRepository loginUserRepository,
         IPasswordHasher passwordHasher,
         ILogger<CreateLoginUserCommandHandler> logger,
         IPermissionService permissionService,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IAuditService auditService)
     {
         _loginUserRepository = loginUserRepository;
         _passwordHasher = passwordHasher;
         _logger = logger;
         _permissionService = permissionService;
         _currentUserService = currentUserService;
-
+        _auditService = auditService;
     }
 
     public async Task<Result<LoginUserDto>> Handle(
@@ -88,7 +92,18 @@ public class CreateLoginUserCommandHandler
             }
 
             await _loginUserRepository.AddAsync(user);
-
+            await _auditService.LogAsync(new AuditLogDto
+            {
+                IdLoginUser = _currentUserService.IdLoginUser,
+                Username = _currentUserService.Username,
+                Action = AuditActions.UserCreated,
+                EntityName = "LoginUsers",
+                EntityId = user.Idloginuser.ToString(),
+                Description = $"Created user '{user.Username}'.",
+                PerformedByRole = _currentUserService.UserRole,
+                Succeeded = true,
+                Severity = AuditSeverity.Information
+            });
             _logger.LogInformation(
                 "Login user {Username} created successfully.",
                 user.Username);

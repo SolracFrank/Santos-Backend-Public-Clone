@@ -4,6 +4,9 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using LanguageExt.Common;
+using Domain.Common.Audit;
+using Domain.Common.Security;
+using Domain.Entities.Dtos;
 
 namespace Application.Features.Estimates;
 
@@ -11,11 +14,19 @@ public class UpdateEstimateCommandHandler : IRequestHandler<UpdateEstimateComman
 {
     private readonly AppDbContext _context;
     private readonly ILogger<UpdateEstimateCommandHandler> _logger;
+    private readonly IAuditService _auditService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public UpdateEstimateCommandHandler(AppDbContext context, ILogger<UpdateEstimateCommandHandler> logger)
+    public UpdateEstimateCommandHandler(
+        AppDbContext context,
+        ILogger<UpdateEstimateCommandHandler> logger,
+        IAuditService auditService,
+        ICurrentUserService currentUserService)
     {
         _context = context;
         _logger = logger;
+        _auditService = auditService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<Domain.Entities.Estimate>> Handle(UpdateEstimateCommand request, CancellationToken cancellationToken)
@@ -32,6 +43,13 @@ public class UpdateEstimateCommandHandler : IRequestHandler<UpdateEstimateComman
 
             if (entity == null)
                 return new Result<Domain.Entities.Estimate>(new KeyNotFoundException($"Estimate {request.Id} was not found."));
+
+            if (entity.LastModifiedUtc != request.LastModifiedUtc)
+            {
+                return new Result<Domain.Entities.Estimate>(
+                    new InvalidOperationException(
+                        "This estimate was modified by another user. Please reload it before saving."));
+            }
 
             entity.Estimatenumber = request.Estimatenumber;
             entity.Estimatedate = request.Estimatedate;
@@ -51,9 +69,21 @@ public class UpdateEstimateCommandHandler : IRequestHandler<UpdateEstimateComman
             entity.Customermessagetext = request.Customermessagetext;
             entity.IsCopy = request.IsCopy;
             entity.CopiedFromEstimateId = request.CopiedFromEstimateId;
+            entity.LastModifiedUtc = DateTime.UtcNow;
 
             await _context.SaveChangesAsync(cancellationToken);
-
+            await _auditService.LogAsync(new AuditLogDto
+            {
+                IdLoginUser = _currentUserService.IdLoginUser,
+                Username = _currentUserService.Username,
+                Action = AuditActions.EstimateUpdated,
+                EntityName = "Estimates",
+                EntityId = entity.Idestimate.ToString(),
+                Description = $"Updated estimate #{entity.Estimatenumber}.",
+                PerformedByRole = _currentUserService.UserRole,
+                Succeeded = true,
+                Severity = AuditSeverity.Information
+            });
             return new Result<Domain.Entities.Estimate>(entity);
         }
         catch (Exception ex)

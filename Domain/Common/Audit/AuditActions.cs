@@ -2,25 +2,41 @@
 {
     public static class AuditActions
     {
+        // Authentication
         public const string Login = "Login";
-        public const string LoginFailed = "LoginFailed";
+        public const string LoginFailed = "Login Failed";
+        public const string Logout = "Logout";
 
-        public const string CreateUser = "CreateUser";
-        public const string UpdateUser = "UpdateUser";
-        public const string DisableUser = "DisableUser";
-        public const string EnableUser = "EnableUser";
-        public const string ChangePassword = "ChangePassword";
-        public const string ChangePermissions = "ChangePermissions";
+        // User Management
+        public const string UserCreated = "User Created";
+        public const string UserUpdated = "User Updated";
+        public const string UserPasswordChanged = "User Password Changed";
+        public const string UserEnabled = "User Enabled";
+        public const string UserDisabled = "User Disabled";
 
-        public const string CreateEstimate = "CreateEstimate";
-        public const string UpdateEstimate = "UpdateEstimate";
-        public const string DeleteEstimate = "DeleteEstimate";
+        // Customers
+        public const string CustomerCreated = "Customer Created";
+        public const string CustomerUpdated = "Customer Updated";
+        public const string CustomerHidden = "Customer Hidden";
 
-        public const string CreateInvoice = "CreateInvoice";
-        public const string UpdateInvoice = "UpdateInvoice";
-        public const string DeleteInvoice = "DeleteInvoice";
+        // Estimates
+        public const string EstimateCreated = "Estimate Created";
+        public const string EstimateUpdated = "Estimate Updated";
+        public const string EstimateDeleted = "Estimate Deleted";
+        public const string EstimateEmailed = "Estimate Emailed";
+        public const string EstimatePrinted = "Estimate Printed";
+        public const string EstimateConverted = "Estimate Converted";
 
-        public const string ReceivePayment = "ReceivePayment";
-        public const string DeletePayment = "DeletePayment";
+        // Invoices
+        public const string InvoiceCreated = "Invoice Created";
+        public const string InvoiceUpdated = "Invoice Updated";
+        public const string InvoiceDeleted = "Invoice Deleted";
+        public const string InvoiceEmailed = "Invoice Emailed";
+        public const string InvoicePrinted = "Invoice Printed";
+
+        // Payments
+        public const string PaymentCreated = "Payment Created";
+        public const string PaymentDeleted = "Payment Deleted";
+        public const string PaymentApplied = "Payment Applied";
     }
 }

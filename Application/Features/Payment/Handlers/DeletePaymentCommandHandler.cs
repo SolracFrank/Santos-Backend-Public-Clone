@@ -1,3 +1,7 @@
+using Domain.Common.Audit;
+using Domain.Common.Security;
+using Domain.Entities;
+using Domain.Entities.Dtos;
 using Infrastructure.Data;
 using LanguageExt.Common;
 using MediatR;
@@ -9,12 +13,18 @@ public class DeletePaymentCommandHandler
     : IRequestHandler<DeletePaymentCommand, Result<bool>>
 {
     private readonly AppDbContext _context;
-
-    public DeletePaymentCommandHandler(AppDbContext context)
+    private readonly IAuditService _auditService;
+    private readonly ICurrentUserService _currentUserService;
+    public DeletePaymentCommandHandler(
+        AppDbContext context,
+        IAuditService auditService,
+        ICurrentUserService currentUserService)
     {
         _context = context;
-    }
+        _auditService = auditService;
+        _currentUserService = currentUserService;
 
+    }
     public async Task<Result<bool>> Handle(
         DeletePaymentCommand request,
         CancellationToken cancellationToken)
@@ -31,6 +41,10 @@ public class DeletePaymentCommandHandler
                 return new Result<bool>(
                     new KeyNotFoundException("Payment not found."));
 
+            int paymentNumber = payment.Paymentnumber;
+            decimal amount = payment.Amount;
+            int idPayment = payment.Idpayment;
+
             foreach (var apply in payment.PaymentApplies.ToList())
             {
                 var invoice = await _context.Invoices
@@ -46,6 +60,7 @@ public class DeletePaymentCommandHandler
                         invoice.Openbalance = invoice.Total;
 
                     invoice.Activeinvoice = invoice.Openbalance > 0;
+                    invoice.LastModifiedUtc = DateTime.UtcNow;
                 }
 
                 _context.PaymentApplies.Remove(apply);
@@ -54,6 +69,19 @@ public class DeletePaymentCommandHandler
             _context.Payments.Remove(payment);
 
             await _context.SaveChangesAsync(cancellationToken);
+
+            await _auditService.LogAsync(new AuditLogDto
+            {
+                IdLoginUser = _currentUserService.IdLoginUser,
+                Username = _currentUserService.Username,
+                Action = AuditActions.PaymentDeleted,
+                EntityName = "Payments",
+                EntityId = idPayment.ToString(),
+                Description = $"Deleted payment #{paymentNumber} for {amount:C2}.",
+                PerformedByRole = _currentUserService.UserRole,
+                Succeeded = true,
+                Severity = AuditSeverity.Warning
+            });
 
             return true;
         }

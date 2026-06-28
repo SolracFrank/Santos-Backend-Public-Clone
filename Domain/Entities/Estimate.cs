@@ -45,6 +45,8 @@ public partial class Estimate
 
     public virtual Estimate? CopiedFromEstimate { get; set; }
 
+    public DateTime LastModifiedUtc { get; set; }
+
     public virtual ICollection<Estimatedetail> Estimatedetails { get; set; } = new List<Estimatedetail>();
 
     public virtual Customermessage? IdcustomermessageNavigation { get; set; }
@@ -56,4 +58,5 @@ public partial class Estimate
     public virtual User? IdusersNavigation { get; set; }
 
     public virtual ICollection<Estimate> InverseCopiedFromEstimate { get; set; } = new List<Estimate>();
+
 }
