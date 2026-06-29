@@ -15,4 +15,10 @@ public sealed record SendEmailCommand : IRequest<Result<Unit>>
     public IFormFile? Pdf { get; init; }
 
     public List<IFormFile> Files { get; init; } = [];
+
+    public string? EntityName { get; init; }
+
+    public string? EntityId { get; init; }
+
+    public string? DocumentNumber { get; init; }
 }

@@ -38,5 +38,9 @@
         public const string PaymentCreated = "Payment Created";
         public const string PaymentDeleted = "Payment Deleted";
         public const string PaymentApplied = "Payment Applied";
+
+        //Email
+        public const string EmailSent = "Email Sent";
+        public const string EmailFailed = "Email Failed";
     }
 }

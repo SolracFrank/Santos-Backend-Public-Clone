@@ -6,6 +6,9 @@ using LanguageExt.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Domain.Common.Audit;
+using Domain.Common.Security;
+using Domain.Entities.Dtos;
 
 namespace Application.Features.Email;
 
@@ -14,15 +17,21 @@ public sealed class SendEmailCommandHandler : IRequestHandler<SendEmailCommand, 
     private readonly IEmailService _emailService;
     private readonly ILogger<SendEmailCommandHandler> _logger;
     private readonly EmailAttachmentOptions _attachmentOptions;
+    private readonly IAuditService _auditService;
+    private readonly ICurrentUserService _currentUserService;
 
     public SendEmailCommandHandler(
-        IEmailService emailService,
-        ILogger<SendEmailCommandHandler> logger,
-        IOptions<EmailAttachmentOptions> attachmentOptions)
+    IEmailService emailService,
+    ILogger<SendEmailCommandHandler> logger,
+    IOptions<EmailAttachmentOptions> attachmentOptions,
+    IAuditService auditService,
+    ICurrentUserService currentUserService)
     {
         _emailService = emailService;
         _logger = logger;
         _attachmentOptions = attachmentOptions.Value;
+        _auditService = auditService;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<Unit>> Handle(SendEmailCommand request, CancellationToken cancellationToken)
@@ -60,11 +69,54 @@ public sealed class SendEmailCommandHandler : IRequestHandler<SendEmailCommand, 
                 attachments: attachments,
                 cancellationToken: cancellationToken);
 
+            await _auditService.LogAsync(new AuditLogDto
+            {
+                IdLoginUser = _currentUserService.IdLoginUser,
+                Username = _currentUserService.Username,
+
+                Action = AuditActions.EmailSent,
+
+                EntityName = request.EntityName,
+
+                EntityId = request.EntityId,
+
+                Description =
+        $"{request.EntityName?.TrimEnd('s')} #{request.DocumentNumber} emailed to {request.To}.",
+
+                PerformedByRole = _currentUserService.UserRole,
+
+                Severity = AuditSeverity.Information,
+
+                Succeeded = true
+            });
+
             return new Result<Unit>(Unit.Value);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while handling {HandlerName}.", nameof(SendEmailCommandHandler));
+
+            await _auditService.LogAsync(new AuditLogDto
+            {
+                IdLoginUser = _currentUserService.IdLoginUser,
+                Username = _currentUserService.Username,
+
+                Action = AuditActions.EmailFailed,
+
+                EntityName = request.EntityName,
+
+                EntityId = request.EntityId,
+
+                Description =
+        $"Failed to email {request.EntityName?.TrimEnd('s')} #{request.DocumentNumber} to {request.To}. Error: {ex.Message}",
+
+                PerformedByRole = _currentUserService.UserRole,
+
+                Severity = AuditSeverity.Error,
+
+                Succeeded = false
+            });
+
             return new Result<Unit>(ex);
         }
         finally
