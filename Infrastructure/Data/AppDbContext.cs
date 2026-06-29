@@ -163,6 +163,15 @@ public partial class AppDbContext : DbContext
 
             entity.Property(e => e.CanDeleteItems)
                 .IsRequired();
+
+            entity.Property(e => e.EmailFromAddress)
+                .HasMaxLength(255);
+
+            entity.Property(e => e.EmailFromName)
+                .HasMaxLength(150);
+
+            entity.Property(e => e.CanSendEmails)
+                .IsRequired();
         });
 
         modelBuilder.Entity<Payment>(entity =>

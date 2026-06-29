@@ -22,7 +22,11 @@ namespace Application.Features.LoginUsers.Mappers
                 CanViewAuditLog = entity.CanViewAuditLog,
                 CanManagePermissions = entity.CanManagePermissions,
                 CanManageItems = entity.CanManageItems,
-                CanDeleteItems = entity.CanDeleteItems
+                CanDeleteItems = entity.CanDeleteItems,
+
+                EmailFromAddress = entity.EmailFromAddress,
+                EmailFromName = entity.EmailFromName,
+                CanSendEmails = entity.CanSendEmails
             };
         }
     }

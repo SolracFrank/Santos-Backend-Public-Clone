@@ -8,7 +8,6 @@ using Domain.Exceptions;
 using LanguageExt.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Domain.Common.Audit;
 
 namespace Application.Features.LoginUsers.Handlers;
 
@@ -28,7 +27,8 @@ public class CreateLoginUserCommandHandler
         ILogger<CreateLoginUserCommandHandler> logger,
         IPermissionService permissionService,
         ICurrentUserService currentUserService,
-        IAuditService auditService)
+        IAuditService auditService
+        )
     {
         _loginUserRepository = loginUserRepository;
         _passwordHasher = passwordHasher;
@@ -36,6 +36,7 @@ public class CreateLoginUserCommandHandler
         _permissionService = permissionService;
         _currentUserService = currentUserService;
         _auditService = auditService;
+
     }
 
     public async Task<Result<LoginUserDto>> Handle(
@@ -83,7 +84,11 @@ public class CreateLoginUserCommandHandler
                 CanViewAuditLog = request.CanViewAuditLog,
                 CanManagePermissions = request.CanManagePermissions,
                 CanManageItems = request.CanManageItems,
-                CanDeleteItems = request.CanDeleteItems
+                CanDeleteItems = request.CanDeleteItems,
+
+                EmailFromAddress = request.EmailFromAddress,
+                EmailFromName = request.EmailFromName,
+                CanSendEmails = request.CanSendEmails
             };
 
             if (user.UserRole == "Administrator")

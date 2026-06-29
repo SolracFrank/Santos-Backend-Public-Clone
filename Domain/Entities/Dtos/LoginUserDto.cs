@@ -27,5 +27,11 @@
         public bool CanManageItems { get; set; }
 
         public bool CanDeleteItems { get; set; }
+
+        public string? EmailFromAddress { get; set; }
+
+        public string? EmailFromName { get; set; }
+
+        public bool CanSendEmails { get; set; } = true;
     }
 }

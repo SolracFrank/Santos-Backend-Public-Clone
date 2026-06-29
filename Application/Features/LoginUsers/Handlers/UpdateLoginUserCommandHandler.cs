@@ -91,6 +91,10 @@ public class UpdateLoginUserCommandHandler
             user.CanManageItems = request.CanManageItems;
             user.CanDeleteItems = request.CanDeleteItems;
 
+            user.EmailFromAddress = request.EmailFromAddress;
+            user.EmailFromName = request.EmailFromName;
+            user.CanSendEmails = request.CanSendEmails;
+
             if (user.UserRole == "Administrator")
             {
                 user.GrantAdministratorPermissions();

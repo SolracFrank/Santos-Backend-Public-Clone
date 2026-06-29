@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
+using Domain.Common.Security;
 
 public class OutlookGraphEmailService : IEmailService
 {
@@ -14,15 +15,21 @@ public class OutlookGraphEmailService : IEmailService
     private readonly EmailAttachmentOptions _attachmentOptions;
     private readonly ILogger<OutlookGraphEmailService> _logger;
     private readonly GraphServiceClient _graphClient;
+    private readonly ILoginUserRepository _loginUserRepository;
+    private readonly ICurrentUserService _currentUserService;
 
     public OutlookGraphEmailService(
         IOptions<MicrosoftGraphEmailConfiguration> emailOptions,
         IOptions<EmailAttachmentOptions> attachmentOptions,
-        ILogger<OutlookGraphEmailService> logger)
+        ILogger<OutlookGraphEmailService> logger,
+        ILoginUserRepository loginUserRepository,
+        ICurrentUserService currentUserService)
     {
         _emailSettings = emailOptions.Value;
         _attachmentOptions = attachmentOptions.Value;
         _logger = logger;
+        _loginUserRepository = loginUserRepository;
+        _currentUserService = currentUserService;
 
         ValidateEmailSettings();
 
@@ -54,12 +61,29 @@ public class OutlookGraphEmailService : IEmailService
         if (string.IsNullOrWhiteSpace(htmlBody))
             throw new ArgumentException("El cuerpo HTML es requerido.", nameof(htmlBody));
 
+        var currentUser = _currentUserService.IdLoginUser > 0
+        ? await _loginUserRepository.GetByIdAsync(_currentUserService.IdLoginUser)
+        : null;
+
+        string fromEmail =
+            currentUser != null &&
+            currentUser.CanSendEmails &&
+            !string.IsNullOrWhiteSpace(currentUser.EmailFromAddress)
+                ? currentUser.EmailFromAddress
+                : _emailSettings.FromEmail;
+
+        string fromName =
+            currentUser != null &&
+            !string.IsNullOrWhiteSpace(currentUser.EmailFromName)
+                ? currentUser.EmailFromName
+                : _emailSettings.FromName;
+
         var fromRecipient = new Recipient
         {
             EmailAddress = new EmailAddress
             {
-                Address = _emailSettings.FromEmail,
-                Name = _emailSettings.FromName
+                Address = fromEmail,
+                Name = fromName
             }
         };
 
@@ -109,7 +133,7 @@ public class OutlookGraphEmailService : IEmailService
         };
 
         await _graphClient
-            .Users[_emailSettings.FromEmail]
+            .Users[fromEmail]
             .SendMail
             .PostAsync(requestBody, cancellationToken: cancellationToken);
 

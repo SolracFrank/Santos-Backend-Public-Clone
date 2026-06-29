@@ -34,6 +34,12 @@ namespace Domain.Entities
 
         public Guid SecurityStamp { get; set; }
 
+        public string? EmailFromAddress { get; set; }
+
+        public string? EmailFromName { get; set; }
+
+        public bool CanSendEmails { get; set; } = true;
+
         public void GrantAdministratorPermissions()
         {
             CanCreateUsers = true;
