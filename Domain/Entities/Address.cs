@@ -22,5 +22,15 @@ public partial class Address
 
     public string? Ainvoice { get; set; }
 
+    public string? Aaddressline { get; set; }
+
+    public string? Acity { get; set; }
+
+    public string? Astate { get; set; }
+
+    public string? Azip { get; set; }
+
+    public string? Acountry { get; set; }
+
     public virtual ICollection<User> Users { get; set; } = new List<User>();
 }

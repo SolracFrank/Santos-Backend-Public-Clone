@@ -51,7 +51,20 @@ public class UpdateInvoiceCommandHandler : IRequestHandler<UpdateInvoiceCommand,
                     new KeyNotFoundException($"Invoice {request.Id} was not found."));
             }
 
-            if (entity.LastModifiedUtc != request.LastModifiedUtc)
+            if (request.LastModifiedUtc == default)
+            {
+                return new Result<Domain.Entities.Invoice>(
+                    new InvalidOperationException(
+                        "This invoice must be reloaded before saving."));
+            }
+
+            var dbLastModified = entity.LastModifiedUtc.ToUniversalTime();
+            var requestLastModified = request.LastModifiedUtc.ToUniversalTime();
+
+            var diferencia = Math.Abs(
+                (dbLastModified - requestLastModified).TotalSeconds);
+
+            if (diferencia > 2)
             {
                 return new Result<Domain.Entities.Invoice>(
                     new InvalidOperationException(

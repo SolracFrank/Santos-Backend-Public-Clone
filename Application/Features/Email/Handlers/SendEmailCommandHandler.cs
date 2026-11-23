@@ -1,4 +1,3 @@
-using System.Net;
 using Domain.Exceptions;
 using Domain.Models.ConfigurationModels;
 using Infrastructure.Services.Interfaces;
@@ -9,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Domain.Common.Audit;
 using Domain.Common.Security;
 using Domain.Entities.Dtos;
+using System.Net;
 
 namespace Application.Features.Email;
 
@@ -51,7 +51,12 @@ public sealed class SendEmailCommandHandler : IRequestHandler<SendEmailCommand, 
                 attachments.Add(await CreateAttachmentAsync(file, cancellationToken));
             }
 
-            string htmlBody = $"<p>{WebUtility.HtmlEncode(request.Message).Replace("\r\n", "<br>").Replace("\n", "<br>")}</p>";
+            string htmlBody = request.IsHtml
+            ? request.Message
+            : WebUtility.HtmlEncode(request.Message)
+            .Replace("\r\n", "<br>")
+            .Replace("\n", "<br>")
+            .Replace("\t", "&emsp;&emsp;");
 
             _logger.LogInformation(
                 "Sending email to {ToEmail} with subject {Subject}, main PDF: {HasMainPdf}, and {AttachmentCount} additional attachments.",

@@ -19,6 +19,20 @@ public partial class AddressConfiguration : IEntityTypeConfiguration<Address>
         entity.Property(e => e.Aemail).HasMaxLength(120);
         entity.Property(e => e.Afirstname).HasMaxLength(50);
         entity.Property(e => e.Ainvoice).HasMaxLength(200);
+        entity.Property(e => e.Aaddressline)
+    .HasMaxLength(255);
+
+        entity.Property(e => e.Acity)
+            .HasMaxLength(100);
+
+        entity.Property(e => e.Astate)
+            .HasMaxLength(100);
+
+        entity.Property(e => e.Azip)
+            .HasMaxLength(50);
+
+        entity.Property(e => e.Acountry)
+            .HasMaxLength(100);
         entity.Property(e => e.Ajobtitle).HasMaxLength(50);
         entity.Property(e => e.Alastname).HasMaxLength(50);
         entity.Property(e => e.Amainphone).HasMaxLength(10);

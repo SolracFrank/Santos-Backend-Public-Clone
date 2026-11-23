@@ -12,4 +12,7 @@ public class CustomerTransaction
     public string Account { get; set; } = "";
     public decimal Amount { get; set; }
     public string? Status { get; set; }
+
+    
+    public string? PaymentType { get; set; }
 }

@@ -38,7 +38,12 @@ public class UpdateAddressCommandHandler : IRequestHandler<UpdateAddressCommand,
                 Aemail = request.Aemail,
                 Aother = request.Aother,
                 Accemail = request.Accemail,
-                Ainvoice = request.Ainvoice
+                Ainvoice = request.Ainvoice,
+                Aaddressline = request.Aaddressline,
+                Acity = request.Acity,
+                Astate = request.Astate,
+                Azip = request.Azip,
+                Acountry = request.Acountry
             };
             _logger.LogInformation("Updating {EntityName} with id {Id}. Handler: {HandlerName}.", "Addres", request.Id, nameof(UpdateAddressCommandHandler));
             _context.Entry(entity).State = EntityState.Modified;

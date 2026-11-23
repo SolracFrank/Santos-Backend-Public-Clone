@@ -61,21 +61,25 @@ public class GetTransactionsByCustomerQueryHandler : IRequestHandler<GetTransact
              i.Openbalance < i.Total ? "Partially Paid" :
              "Open"
             })
-                .ToListAsync(cancellationToken);  
+                .ToListAsync(cancellationToken);
 
             var payments = await _context.Payments
-                .Where(p => p.Idusers == request.IdUser)
-                .Select(p => new CustomerTransaction
-                {
-                    Idpayment = p.Idpayment,
-                    Type = "Payment",
-                    Num = p.Paymentnumber.ToString(),
-                    Date = p.Paymentdate,
-                    Account = "Payment",
-                    Amount = -p.Amount,
-                    Status = ""
-                })
-                 .ToListAsync(cancellationToken);
+            .Where(p => p.Idusers == request.IdUser)
+            .Select(p => new CustomerTransaction
+            {
+            Idpayment = p.Idpayment,
+            Type = "Payment",
+            Num = p.Paymentnumber.ToString(),
+            Date = p.Paymentdate,
+            Account = "Payment",
+            Amount = -p.Amount,
+            Status = "",
+            PaymentType = _context.Paymds
+             .Where(pm => pm.Idpaymd == p.Idpaymd)
+             .Select(pm => pm.Pmdname)
+             .FirstOrDefault()
+            })
+            .ToListAsync(cancellationToken);
 
             var transactions = estimates
                 .Concat(invoices)

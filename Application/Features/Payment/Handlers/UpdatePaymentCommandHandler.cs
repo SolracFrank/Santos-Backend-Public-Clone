@@ -36,7 +36,8 @@ public class UpdatePaymentCommandHandler : IRequestHandler<UpdatePaymentCommand,
                 Memo = request.Memo,
                 Idusers = request.Idusers,
                 Idpaymd = request.Idpaymd,
-                Idaccount = request.Idaccount
+                Idaccount = request.Idaccount,
+                Reference = request.Reference
             };
             _logger.LogInformation("Updating {EntityName} with id {Id}. Handler: {HandlerName}.", "Payment", request.Id, nameof(UpdatePaymentCommandHandler));
             _context.Entry(entity).State = EntityState.Modified;

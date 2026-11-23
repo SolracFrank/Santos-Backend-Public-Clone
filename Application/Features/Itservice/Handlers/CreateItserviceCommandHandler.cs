@@ -58,7 +58,8 @@ public class CreateItserviceCommandHandler : IRequestHandler<CreateItserviceComm
                 Idaccounts = request.Idaccounts,
                 Idaccountn = request.Idaccountn,
                 Idpaymd = request.Idpaymd,
-                Iditemfk = request.Iditemfk
+                Iditemfk = request.Iditemfk,
+                UseNegativeAmount = request.UseNegativeAmount
             };
             _logger.LogInformation("Creating {EntityName}. Handler: {HandlerName}.", nameof(Itservice), nameof(CreateItserviceCommandHandler));
             _context.Set<Itservice>().Add(entity);

@@ -16,6 +16,7 @@ public class ItserviceDto
     public int? Idaccountn { get; set; }
     public int? Idpaymd { get; set; }
     public int? Iditemfk { get; set; }
+    public bool UseNegativeAmount { get; set; }
     public List<EstimatedetailDto> Estimatedetails { get; set; } = new List<EstimatedetailDto>();
     public AccountDto? IdaccountnNavigation { get; set; }
     public AccountDto? IdaccountpNavigation { get; set; }

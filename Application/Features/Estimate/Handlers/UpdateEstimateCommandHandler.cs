@@ -44,7 +44,20 @@ public class UpdateEstimateCommandHandler : IRequestHandler<UpdateEstimateComman
             if (entity == null)
                 return new Result<Domain.Entities.Estimate>(new KeyNotFoundException($"Estimate {request.Id} was not found."));
 
-            if (entity.LastModifiedUtc != request.LastModifiedUtc)
+            if (request.LastModifiedUtc == default)
+            {
+                return new Result<Domain.Entities.Estimate>(
+                    new InvalidOperationException(
+                        "This estimate must be reloaded before saving."));
+            }
+
+            var dbLastModified = entity.LastModifiedUtc.ToUniversalTime();
+            var requestLastModified = request.LastModifiedUtc.ToUniversalTime();
+
+            var diferencia = Math.Abs(
+                (dbLastModified - requestLastModified).TotalSeconds);
+
+            if (diferencia > 2)
             {
                 return new Result<Domain.Entities.Estimate>(
                     new InvalidOperationException(

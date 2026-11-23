@@ -33,6 +33,8 @@ public partial class Itservice
 
     public int? Iditemfk { get; set; }
 
+    public bool UseNegativeAmount { get; set; }
+
     public virtual ICollection<Estimatedetail> Estimatedetails { get; set; } = new List<Estimatedetail>();
 
     public virtual Account? IdaccountnNavigation { get; set; }

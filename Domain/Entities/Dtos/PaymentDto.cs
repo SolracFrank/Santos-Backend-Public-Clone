@@ -7,6 +7,7 @@ public class PaymentDto
     public DateTime Paymentdate { get; set; }
     public decimal Amount { get; set; }
     public string? Memo { get; set; }
+    public string? Reference { get; set; }
     public int? Idusers { get; set; }
     public int? Idpaymd { get; set; }
     public int? Idaccount { get; set; }

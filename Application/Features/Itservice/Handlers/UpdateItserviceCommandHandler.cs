@@ -61,7 +61,8 @@ public class UpdateItserviceCommandHandler : IRequestHandler<UpdateItserviceComm
                 Idaccounts = request.Idaccounts,
                 Idaccountn = request.Idaccountn,
                 Idpaymd = request.Idpaymd,
-                Iditemfk = request.Iditemfk
+                Iditemfk = request.Iditemfk,
+                UseNegativeAmount = request.UseNegativeAmount
             };
             _logger.LogInformation("Updating {EntityName} with id {Id}. Handler: {HandlerName}.", "Itservice", request.Id, nameof(UpdateItserviceCommandHandler));
             _context.Entry(entity).State = EntityState.Modified;

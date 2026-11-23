@@ -15,6 +15,8 @@ public partial class Payment
 
     public string? Memo { get; set; }
 
+    public string? Reference { get; set; }
+
     public int? Idusers { get; set; }
 
     public int? Idpaymd { get; set; }

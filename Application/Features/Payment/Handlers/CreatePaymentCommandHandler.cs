@@ -56,7 +56,8 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
                     Memo = request.Memo,
                     Idusers = request.Idusers,
                     Idpaymd = request.Idpaymd,
-                    Idaccount = request.Idaccount
+                    Idaccount = request.Idaccount,
+                    Reference = request.Reference
                 };
 
                 _logger.LogInformation(

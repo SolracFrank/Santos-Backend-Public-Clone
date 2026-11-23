@@ -21,4 +21,6 @@ public sealed record SendEmailCommand : IRequest<Result<Unit>>
     public string? EntityId { get; init; }
 
     public string? DocumentNumber { get; init; }
+
+    public bool IsHtml { get; init; }
 }

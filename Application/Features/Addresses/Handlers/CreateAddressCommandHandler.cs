@@ -34,7 +34,12 @@ public class CreateAddressCommandHandler : IRequestHandler<CreateAddressCommand,
                 Aemail = request.Aemail,
                 Aother = request.Aother,
                 Accemail = request.Accemail,
-                Ainvoice = request.Ainvoice
+                Ainvoice = request.Ainvoice,
+                Aaddressline = request.Aaddressline,
+                Acity = request.Acity,
+                Astate = request.Astate,
+                Azip = request.Azip,
+                Acountry = request.Acountry
             };
             _logger.LogInformation("Creating {EntityName}. Handler: {HandlerName}.", nameof(Address), nameof(CreateAddressCommandHandler));
             _context.Set<Address>().Add(entity);
