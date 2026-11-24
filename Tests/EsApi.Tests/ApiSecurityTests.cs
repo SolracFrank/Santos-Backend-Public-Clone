@@ -1,20 +1,12 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using Application.Common.Behaviors;
 using Application.Features.LoginUsers.Commands;
-using Domain.Common.Security;
 using Domain.Entities;
 using Infrastructure.Data;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
@@ -26,15 +18,15 @@ public sealed class ApiSecurityTests
     public async Task AttachmentsRequireAdminAndDoNotReturnStoragePath()
     {
         using var app = new ApiFactory();
-        using var client = app.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
+        using var client = app.CreateHttpsClient();
         var anonymous = await client.GetAsync("/api/v1/attachments");
         Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
 
-        await AuthenticateAsync(app, client, "Staff");
+        await app.AuthenticateAsync(client, "Staff");
         var employee = await client.GetAsync("/api/v1/attachments");
         Assert.Equal(HttpStatusCode.Forbidden, employee.StatusCode);
 
-        await AuthenticateAsync(app, client, LoginUser.AdministratorRole);
+        await app.AuthenticateAsync(client, LoginUser.AdministratorRole);
         var created = await client.PostAsJsonAsync("/api/v1/attachments", new
         {
             EntityType = "Invoice",
@@ -54,8 +46,8 @@ public sealed class ApiSecurityTests
     public async Task RevokedSessionsAreRejected(bool disableUser)
     {
         using var app = new ApiFactory();
-        using var client = app.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
-        var userId = await AuthenticateAsync(app, client, LoginUser.AdministratorRole);
+        using var client = app.CreateHttpsClient();
+        var userId = await app.AuthenticateAsync(client, LoginUser.AdministratorRole);
         var before = await client.GetAsync("/api/v1/attachments");
         Assert.Equal(HttpStatusCode.OK, before.StatusCode);
         using var scope = app.Services.CreateScope();
@@ -75,8 +67,8 @@ public sealed class ApiSecurityTests
     public async Task UserCreatorCannotGrantAdministratorRole()
     {
         using var app = new ApiFactory();
-        using var client = app.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
-        await AuthenticateAsync(app, client, "Staff", canCreateUsers: true);
+        using var client = app.CreateHttpsClient();
+        await app.AuthenticateAsync(client, "Staff", canCreateUsers: true);
         var response = await client.PostAsJsonAsync("/api/v1/loginusers", new
         {
             Username = "test-admin",
@@ -105,12 +97,12 @@ public sealed class ApiSecurityTests
     public async Task InvoiceBalanceAndPaymentAmountsAreValidated()
     {
         using var app = new ApiFactory();
-        using var client = app.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
-        await AuthenticateAsync(app, client, "Staff");
+        using var client = app.CreateHttpsClient();
+        await app.AuthenticateAsync(client, "Staff");
         var unauthorizedWrite = await client.PostAsJsonAsync("/api/v1/payments", new { Amount = 50 });
         Assert.Equal(HttpStatusCode.Forbidden, unauthorizedWrite.StatusCode);
 
-        await AuthenticateAsync(app, client, LoginUser.AdministratorRole);
+        await app.AuthenticateAsync(client, LoginUser.AdministratorRole);
         var invoice = await client.PostAsJsonAsync("/api/v1/invoices", new { Subtotal = 100, Total = 100, Openbalance = 101 });
         var payment = await client.PostAsJsonAsync("/api/v1/payments", new { Amount = -1 });
         Assert.Equal(HttpStatusCode.BadRequest, invoice.StatusCode);
@@ -121,8 +113,8 @@ public sealed class ApiSecurityTests
     public async Task PaymentAllocationRejectsDifferentCustomersAndExcessAmounts()
     {
         using var app = new ApiFactory();
-        using var client = app.CreateClient(new() { BaseAddress = new Uri("https://localhost") });
-        await AuthenticateAsync(app, client, LoginUser.AdministratorRole);
+        using var client = app.CreateHttpsClient();
+        await app.AuthenticateAsync(client, LoginUser.AdministratorRole);
         using var scope = app.Services.CreateScope();
         var database = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var payment = new Payment { Amount = 100, Idusers = 11 };
@@ -145,48 +137,6 @@ public sealed class ApiSecurityTests
             new { payment.Idpayment, customerInvoice.Idinvoice, AmountApplied = 21 });
         Assert.Equal(HttpStatusCode.Conflict, overcommitted.StatusCode);
         Assert.Equal(1, await database.PaymentApplies.CountAsync());
-    }
-
-    private static async Task<int> AuthenticateAsync(
-        ApiFactory app, HttpClient client, string role, bool canCreateUsers = false)
-    {
-        using var scope = app.Services.CreateScope();
-        var database = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var user = new LoginUser
-        {
-            Username = Guid.NewGuid().ToString(),
-            PasswordHash = string.Empty,
-            UserRole = role,
-            IsActive = true,
-            CanCreateUsers = canCreateUsers,
-            SecurityStamp = Guid.NewGuid()
-        };
-        database.LoginUsers.Add(user);
-        await database.SaveChangesAsync();
-        var token = scope.ServiceProvider.GetRequiredService<IJwtTokenService>().GenerateToken(user);
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
-        return user.Idloginuser;
-    }
-
-    private sealed class ApiFactory : WebApplicationFactory<Program>
-    {
-        private readonly string _database = Guid.NewGuid().ToString();
-
-        protected override void ConfigureWebHost(IWebHostBuilder builder)
-        {
-            builder.UseEnvironment("Testing");
-            builder.UseSetting("Jwt:SecretKey", Convert.ToHexString(RandomNumberGenerator.GetBytes(32)));
-            builder.UseSetting("Jwt:Issuer", "test-issuer");
-            builder.UseSetting("Jwt:Audience", "test-audience");
-            builder.UseSetting("API_BOOTSTRAP_ADMIN_PASSWORD", string.Empty);
-            builder.UseSetting("Sentry:Dsn", string.Empty);
-            builder.ConfigureTestServices(services =>
-            {
-                services.RemoveAll<IDbContextOptionsConfiguration<AppDbContext>>();
-                services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase(_database)
-                    .ConfigureWarnings(warnings => warnings.Ignore(InMemoryEventId.TransactionIgnoredWarning)));
-            });
-        }
     }
 
     private sealed class RecordingLogger<T> : ILogger<T>
