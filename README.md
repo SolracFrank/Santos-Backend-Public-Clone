@@ -1,38 +1,38 @@
-# Operations API
+# Santos Backend
 
-API REST para gestionar clientes, presupuestos, facturas, pagos y registros operativos. Usa ASP.NET Core, EF Core con MySQL, MediatR, FluentValidation y autenticación JWT.
+REST API for customers, estimates, invoices, and payments. Built with ASP.NET Core, EF Core, MySQL, and JWT authentication.
 
-## Estructura
+## Build and test
 
-- `API-main/` expone controladores HTTP, Swagger en desarrollo y respuestas Problem Details.
-- `Application/` organiza los casos de uso, validadores y autorización por operación.
-- `Domain/` define entidades, contratos y errores de negocio.
-- `Infrastructure/` implementa persistencia, autenticación, auditoría y correo.
-- `Tests/` ejecuta la API en memoria para comprobar permisos, revocación y validaciones. Para comprobar el comportamiento transaccional, usa también MySQL en un entorno de pruebas.
-
-## Compilar y probar
-
-Instala el SDK de .NET 10.
+Requires the .NET 10 SDK.
 
 ```sh
 dotnet build API-main/EsApi.csproj
 dotnet test Tests/EsApi.Tests/EsApi.Tests.csproj
 ```
 
-Para ejecutar la API, usa una base MySQL con el esquema correspondiente. El modelo de EF es database-first. Configura los valores con User Secrets en desarrollo y con el gestor de secretos del entorno en producción.
+The test suite runs the API against an in-memory database. Use MySQL to verify transactions and concurrency.
 
-| Variable de entorno | Uso |
+## Run locally
+
+Use an existing MySQL database with the application schema. Store development secrets in .NET User Secrets and production secrets in your deployment's secret store.
+
+| Environment variable | Purpose |
 | --- | --- |
-| `ConnectionStrings__DefaultConnection` | Cadena de conexión de MySQL. |
-| `Jwt__Issuer`, `Jwt__Audience`, `Jwt__SecretKey` | Emisor, audiencia y clave de firma JWT. Usa una clave aleatoria de al menos 32 bytes. |
-| `API_BOOTSTRAP_ADMIN_PASSWORD` | Credencial de uso único para aprovisionar el primer administrador cuando la tabla de usuarios está vacía. Retírala tras el primer arranque. |
-| `MicrosoftGraphEmail__TenantId`, `MicrosoftGraphEmail__ClientId`, `MicrosoftGraphEmail__ClientSecret`, `MicrosoftGraphEmail__FromEmail` | Configuración opcional del envío de correo. |
-| `Sentry__Dsn` | Telemetría opcional. |
-
-Con esas variables configuradas:
+| `ConnectionStrings__DefaultConnection` | MySQL connection string. |
+| `Jwt__Issuer`, `Jwt__Audience`, `Jwt__SecretKey` | JWT settings. Use a signing key generated from at least 32 random bytes. |
+| `API_BOOTSTRAP_ADMIN_PASSWORD` | Optional password for creating the first administrator when the user table is empty. Remove it after setup. |
+| `MicrosoftGraphEmail__TenantId`, `MicrosoftGraphEmail__ClientId`, `MicrosoftGraphEmail__ClientSecret`, `MicrosoftGraphEmail__FromEmail` | Optional Microsoft Graph mail settings. |
+| `Sentry__Dsn` | Optional error reporting. |
 
 ```sh
 dotnet run --project API-main/EsApi.csproj
 ```
 
-Autentícate con `POST /api/v1/auth/login` y envía el JWT como encabezado `Authorization: Bearer …`. Las operaciones de adjuntos y las escrituras de facturas y pagos requieren el rol `Administrator`. Las respuestas de adjuntos omiten la ruta de almacenamiento.
+Swagger is available in development. Call `POST /api/v1/auth/login` for a JWT and send it as `Authorization: Bearer <token>`. Attachment operations and writes to invoices and payments require the `Administrator` role.
+
+See the [architecture notes](docs/agent-guidelines/architecture.md) and [release checklist](docs/release-checklist.md).
+
+## License
+
+All rights reserved. See [LICENSE](LICENSE).

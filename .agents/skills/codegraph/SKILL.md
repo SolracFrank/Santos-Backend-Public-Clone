@@ -1,21 +1,10 @@
 ---
 name: codegraph
-description: Use CodeGraph MCP for safe refactoring and code navigation.
+description: Use CodeGraph to trace dependencies before refactoring.
 ---
 
-# CodeGraph Skill
+# CodeGraph
 
-Use CodeGraph before non-trivial refactors.
-
-Workflow:
-1. Find target symbol.
-2. Find callers.
-3. Find callees.
-4. Identify affected files.
-5. Read source files.
-6. Create a refactor plan.
-7. Apply smallest safe change.
-8. Re-check references.
-9. Build and verify.
-
-Never trust graph results without reading source code.
+1. Find the symbol and trace callers and callees.
+2. Read the affected source and identify contract or behavior changes.
+3. Make the smallest change, then check references and run the relevant tests.
