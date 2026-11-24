@@ -27,10 +27,18 @@ builder.WebHost.UseSentry(options =>
     options.TracesSampleRate = builder.Configuration
         .GetValue<double?>("Sentry:TracesSampleRate") ?? 0.0;
 
-    options.SendDefaultPii = builder.Configuration
-        .GetValue<bool?>("Sentry:SendDefaultPii") ?? false;
-
-    options.Debug = true;
+    options.SendDefaultPii = false;
+    options.Debug = builder.Environment.IsDevelopment();
+    options.SetBeforeSend(sentryEvent =>
+    {
+        sentryEvent.Request.QueryString = null;
+        return sentryEvent;
+    });
+    options.SetBeforeSendTransaction(transaction =>
+    {
+        transaction.Request.QueryString = null;
+        return transaction;
+    });
 });
 #endregion
 
@@ -123,11 +131,13 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+var bootstrapPassword = app.Configuration["API_BOOTSTRAP_ADMIN_PASSWORD"];
+if (!string.IsNullOrWhiteSpace(bootstrapPassword))
 {
+    using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    await DefaultAdminSeeder.SeedAsync(context);
+    await DefaultAdminSeeder.SeedAsync(context, bootstrapPassword);
 }
 
 app.UseMiddleware<CorrelationIdMiddleware>();
@@ -152,20 +162,10 @@ if (app.Environment.IsDevelopment())
                 description.GroupName.ToUpperInvariant());
         }
 
-        options.DocumentTitle = "Swagger - Operations API";
+        options.DocumentTitle = "Operations API";
         options.RoutePrefix = string.Empty;
     });
 
-    app.MapGet("/", context =>
-    {
-        context.Response.Redirect("/swagger");
-        return Task.CompletedTask;
-    });
-
-    app.MapGet("/test-sentry", () =>
-    {
-        throw new Exception("Sentry test exception");
-    });
 }
 
 app.UseHttpsRedirection();
@@ -178,6 +178,6 @@ app.UseRateLimiter();
 
 app.MapControllers();
 
-app.MapControllers();
-
 app.Run();
+
+public partial class Program;

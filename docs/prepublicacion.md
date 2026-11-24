@@ -1,0 +1,8 @@
+# Verificación antes de publicar
+
+1. Coordinar el reemplazo de la credencial de MySQL si sigue activa. Validar que la API usa la nueva credencial y revocar la anterior. Desactivar la cuenta creada con la contraseña anterior o restablecer sus credenciales y revocar sus sesiones.
+2. Revisar logs históricos locales y de producción, sus exportaciones y Sentry. Si se guardaron contraseñas de restablecimiento, restringir el acceso, rotar las contraseñas afectadas y eliminar las copias según la política de retención.
+3. Validar en un entorno privado con MySQL y con el cliente real. Comprobar los roles que usan adjuntos y escrituras financieras, que el cliente no consume la ruta privada de adjuntos y que desactivar o restablecer una cuenta invalida el JWT. Revisar aplicaciones de pago simultáneas y los saldos con el flujo real del cliente.
+4. Con el repo todavía privado, confirmar los SHA actuales de cada rama remota mediante `git ls-remote --refs origin`. Publicar las referencias explícitas de `main`, `Franqui`, `Franqui-agent` y `franqui` con `--atomic` y un `--force-with-lease` explícito por rama. Evitar `--mirror` para conservar las referencias privadas fuera del push.
+5. Verificar el resultado con un clon limpio. Revisar referencias de pull requests, forks, artefactos, releases y cachés que puedan conservar el historial anterior. Habilitar el escaneo de secretos de GitHub y la protección de pushes si el plan del repositorio los permite.
+6. Confirmar autorización para publicar código del producto y decidir la licencia con quienes tengan los derechos. Cambiar la visibilidad después de completar estas verificaciones.

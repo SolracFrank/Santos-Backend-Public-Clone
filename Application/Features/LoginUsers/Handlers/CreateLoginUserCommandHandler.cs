@@ -59,6 +59,17 @@ public class CreateLoginUserCommandHandler
                     "USER_CREATE_FORBIDDEN");
             }
 
+            var createsAdministrator = request.UserRole == LoginUser.AdministratorRole;
+            var assignsPermissions = createsAdministrator || request.CanCreateUsers || request.CanEditUsers ||
+                request.CanDisableUsers || request.CanViewAuditLog || request.CanManagePermissions ||
+                request.CanManageItems || request.CanDeleteItems || request.CanSendEmails;
+
+            if ((createsAdministrator && _currentUserService.UserRole != LoginUser.AdministratorRole) ||
+                (assignsPermissions && !await _permissionService.CanManagePermissionsAsync(_currentUserService.IdLoginUser)))
+            {
+                throw new ForbiddenException("You do not have permission to assign these privileges.", "USER_PERMISSIONS_FORBIDDEN");
+            }
+
             var existingUser = await _loginUserRepository
                 .GetByUsernameAsync(request.Username);
 
@@ -91,7 +102,7 @@ public class CreateLoginUserCommandHandler
                 CanSendEmails = request.CanSendEmails
             };
 
-            if (user.UserRole == "Administrator")
+            if (createsAdministrator)
             {
                 user.GrantAdministratorPermissions();
             }

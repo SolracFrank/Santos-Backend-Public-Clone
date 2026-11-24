@@ -1,7 +1,9 @@
 using Application.Features.Payments;
 using Domain.Entities.Dtos;
+using Domain.Entities;
 using EsApi.Controllers;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -30,6 +32,7 @@ public class PaymentsController : BaseApiController
         return await SendAsync(new GetPaymentByIdQuery(id), cancellationToken);
     }
 
+    [Authorize(Roles = LoginUser.AdministratorRole)]
     [HttpPost]
     [SwaggerOperation(Summary = "Creates a payment.", Description = "Creates a new payment using the request body.")]
     [SwaggerResponse(StatusCodes.Status200OK, "Returns the created payment.", typeof(PaymentDto))]
@@ -39,6 +42,7 @@ public class PaymentsController : BaseApiController
         return await SendAsync(command, cancellationToken);
     }
 
+    [Authorize(Roles = LoginUser.AdministratorRole)]
     [HttpPut("{id:int}")]
     [SwaggerOperation(Summary = "Updates a payment.", Description = "Updates an existing payment using the provided id and request body.")]
     [SwaggerResponse(StatusCodes.Status200OK, "Returns the updated payment.", typeof(PaymentDto))]
@@ -51,6 +55,7 @@ public class PaymentsController : BaseApiController
         return await SendAsync(command, cancellationToken);
     }
 
+    [Authorize(Roles = LoginUser.AdministratorRole)]
     [HttpDelete("{id:int}")]
     [SwaggerOperation(Summary = "Deletes a payment.", Description = "Deletes the payment that matches the provided id.")]
     [SwaggerResponse(StatusCodes.Status200OK, "The payment was deleted.")]

@@ -1,9 +1,11 @@
 using Domain.Entities;
+using Domain.Exceptions;
 using Infrastructure.Data;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using LanguageExt.Common;
+using System.Data;
 
 namespace Application.Features.PaymentApplies;
 
@@ -27,23 +29,18 @@ public class UpdatePaymentApplyCommandHandler : IRequestHandler<UpdatePaymentApp
             if (request.Id != request.Idpaymentapply)
                 throw new ArgumentException("Id mismatch");
 
-            var entity = new PaymentApply
-            {
-                Idpaymentapply = request.Idpaymentapply,
-                Idpayment = request.Idpayment,
-                Idinvoice = request.Idinvoice,
-                AmountApplied = request.AmountApplied
-            };
+            await using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+            var entity = await _context.PaymentApplies.FindAsync([request.Id], cancellationToken)
+                ?? throw new NotFoundException("Payment allocation not found.");
+            await PaymentAllocationChecks.VerifyAsync(
+                _context, request.Idpayment, request.Idinvoice, request.AmountApplied, request.Id, cancellationToken);
+            entity.Idpayment = request.Idpayment;
+            entity.Idinvoice = request.Idinvoice;
+            entity.AmountApplied = request.AmountApplied;
             _logger.LogInformation("Updating {EntityName} with id {Id}. Handler: {HandlerName}.", "PaymentApply", request.Id, nameof(UpdatePaymentApplyCommandHandler));
-            _context.Entry(entity).State = EntityState.Modified;
             _logger.LogInformation("Saving changes for {HandlerName}.", nameof(UpdatePaymentApplyCommandHandler));
-            var savedChanges = await _context.SaveChangesAsync(cancellationToken);
-            if (savedChanges <= 0)
-            {
-                var saveException = new InvalidOperationException($"No changes were saved while handling UpdatePaymentApplyCommand.");
-                _logger.LogWarning(saveException, "No changes were saved for {HandlerName}.", nameof(UpdatePaymentApplyCommandHandler));
-                return new Result<PaymentApply>(saveException);
-            }
+            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
             _logger.LogInformation("Changes saved for {HandlerName}.", nameof(UpdatePaymentApplyCommandHandler));
             return new Result<PaymentApply>(entity);
         }

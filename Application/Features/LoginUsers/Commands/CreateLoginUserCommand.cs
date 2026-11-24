@@ -32,5 +32,5 @@ public class CreateLoginUserCommand : IRequest<Result<LoginUserDto>>
 
     public string? EmailFromName { get; set; }
 
-    public bool CanSendEmails { get; set; } = true;
+    public bool CanSendEmails { get; set; }
 }

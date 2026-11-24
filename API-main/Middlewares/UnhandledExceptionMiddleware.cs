@@ -51,7 +51,6 @@ public sealed class UnhandledExceptionMiddleware(
 
             scope.SetExtra("traceId", context.TraceIdentifier);
             scope.SetExtra("requestPath", context.Request.Path.Value);
-            scope.SetExtra("queryString", context.Request.QueryString.Value);
         });
     }
 

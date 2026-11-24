@@ -1,7 +1,9 @@
 using Application.Features.Invoices;
 using Domain.Entities.Dtos;
+using Domain.Entities;
 using EsApi.Controllers;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using Application.Features.Invoice.Queries;
@@ -46,6 +48,7 @@ public class InvoicesController : BaseApiController
             cancellationToken);
     }
 
+    [Authorize(Roles = LoginUser.AdministratorRole)]
     [HttpPost]
     [SwaggerOperation(Summary = "Creates a invoice.", Description = "Creates a new invoice using the request body.")]
     [SwaggerResponse(StatusCodes.Status200OK, "Returns the created invoice.", typeof(InvoiceDto))]
@@ -55,6 +58,7 @@ public class InvoicesController : BaseApiController
         return await SendAsync(command, cancellationToken);
     }
 
+    [Authorize(Roles = LoginUser.AdministratorRole)]
     [HttpPut("{id:int}")]
     [SwaggerOperation(Summary = "Updates a invoice.", Description = "Updates an existing invoice using the provided id and request body.")]
     [SwaggerResponse(StatusCodes.Status200OK, "Returns the updated invoice.", typeof(InvoiceDto))]
@@ -67,6 +71,7 @@ public class InvoicesController : BaseApiController
         return await SendAsync(command, cancellationToken);
     }
 
+    [Authorize(Roles = LoginUser.AdministratorRole)]
     [HttpDelete("{id:int}")]
     [SwaggerOperation(Summary = "Deletes a invoice.", Description = "Deletes the invoice that matches the provided id.")]
     [SwaggerResponse(StatusCodes.Status200OK, "The invoice was deleted.")]

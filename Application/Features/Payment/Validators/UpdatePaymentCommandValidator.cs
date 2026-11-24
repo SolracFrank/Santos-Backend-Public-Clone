@@ -8,5 +8,6 @@ public class UpdatePaymentCommandValidator : AbstractValidator<UpdatePaymentComm
     {
         RuleFor(x => x.Id).GreaterThan(0);
         RuleFor(x => x.Id).Equal(x => x.Idpayment);
+        RuleFor(x => x.Amount).GreaterThan(0);
     }
 }

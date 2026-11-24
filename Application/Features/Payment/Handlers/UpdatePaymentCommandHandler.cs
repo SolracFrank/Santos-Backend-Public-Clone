@@ -1,9 +1,11 @@
 using Domain.Entities;
+using Domain.Exceptions;
 using Infrastructure.Data;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using LanguageExt.Common;
+using System.Data;
 
 namespace Application.Features.Payments;
 
@@ -26,6 +28,16 @@ public class UpdatePaymentCommandHandler : IRequestHandler<UpdatePaymentCommand,
         {
             if (request.Id != request.Idpayment)
                 throw new ArgumentException("Id mismatch");
+
+            await using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+            var previous = await _context.Payments.AsNoTracking()
+                .SingleOrDefaultAsync(payment => payment.Idpayment == request.Id, cancellationToken)
+                ?? throw new NotFoundException("Payment not found.");
+            var amountsApplied = await _context.PaymentApplies
+                .Where(allocation => allocation.Idpayment == request.Id)
+                .SumAsync(allocation => allocation.AmountApplied, cancellationToken);
+            if (amountsApplied > request.Amount || (amountsApplied > 0 && request.Idusers != previous.Idusers))
+                throw new ConflictException("An allocated payment must keep its customer and cover the allocated amount.");
 
             var entity = new Payment
             {
@@ -50,6 +62,7 @@ public class UpdatePaymentCommandHandler : IRequestHandler<UpdatePaymentCommand,
                 return new Result<Payment>(saveException);
             }
             _logger.LogInformation("Changes saved for {HandlerName}.", nameof(UpdatePaymentCommandHandler));
+            await transaction.CommitAsync(cancellationToken);
             return new Result<Payment>(entity);
         }
         catch (Exception ex)

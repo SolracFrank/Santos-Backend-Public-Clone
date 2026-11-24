@@ -2,12 +2,12 @@
 using Application.Features.LoginUsers.Mappers;
 using Domain.Common.Audit;
 using Domain.Common.Security;
+using Domain.Entities;
 using Domain.Entities.Dtos;
 using Domain.Exceptions;
 using LanguageExt.Common;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Microsoft.Graph.Models;
 
 namespace Application.Features.LoginUsers.Handlers;
 
@@ -68,6 +68,12 @@ public class UpdateLoginUserCommandHandler
                     "LOGINUSER_NOT_FOUND");
             }
 
+            if ((user.UserRole == LoginUser.AdministratorRole || request.UserRole == LoginUser.AdministratorRole) &&
+                _currentUserService.UserRole != LoginUser.AdministratorRole)
+            {
+                throw new ForbiddenException("Only administrators can manage administrator accounts.", "USER_PERMISSIONS_FORBIDDEN");
+            }
+
             var existingUser = await _loginUserRepository
                 .GetByUsernameAsync(request.Username);
 
@@ -82,6 +88,7 @@ public class UpdateLoginUserCommandHandler
             user.Username = request.Username;
             user.UserRole = request.UserRole;
             user.IsActive = request.IsActive;
+            user.SecurityStamp = Guid.NewGuid();
 
             user.CanCreateUsers = request.CanCreateUsers;
             user.CanEditUsers = request.CanEditUsers;
@@ -95,7 +102,7 @@ public class UpdateLoginUserCommandHandler
             user.EmailFromName = request.EmailFromName;
             user.CanSendEmails = request.CanSendEmails;
 
-            if (user.UserRole == "Administrator")
+            if (user.UserRole == LoginUser.AdministratorRole)
             {
                 user.GrantAdministratorPermissions();
             }

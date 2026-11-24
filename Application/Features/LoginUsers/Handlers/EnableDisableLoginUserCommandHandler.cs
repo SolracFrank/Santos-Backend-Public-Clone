@@ -1,6 +1,7 @@
 ﻿using Application.Features.LoginUsers.Commands;
 using Application.Features.LoginUsers.Mappers;
 using Domain.Common.Security;
+using Domain.Entities;
 using Domain.Entities.Dtos;
 using Domain.Exceptions;
 using LanguageExt.Common;
@@ -57,7 +58,17 @@ public class EnableDisableLoginUserCommandHandler
                     "LOGINUSER_NOT_FOUND");
             }
 
-            user.IsActive = request.IsActive;
+            if (user.UserRole == LoginUser.AdministratorRole &&
+                _currentUserService.UserRole != LoginUser.AdministratorRole)
+            {
+                throw new ForbiddenException("Only administrators can change the status of an administrator account.", "USER_STATUS_FORBIDDEN");
+            }
+
+            if (user.IsActive != request.IsActive)
+            {
+                user.IsActive = request.IsActive;
+                user.SecurityStamp = Guid.NewGuid();
+            }
 
             await _loginUserRepository.UpdateAsync(user);
 

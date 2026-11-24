@@ -6,12 +6,8 @@ namespace Infrastructure.Security
 {
     public static class DefaultAdminSeeder
     {
-        public static async Task SeedAsync(AppDbContext context)
+        public static async Task SeedAsync(AppDbContext context, string bootstrapPassword)
         {
-            var bootstrapPassword = Environment.GetEnvironmentVariable("API_BOOTSTRAP_ADMIN_PASSWORD");
-            if (string.IsNullOrWhiteSpace(bootstrapPassword))
-                return;
-
             var hasUsers = await context.LoginUsers.AnyAsync();
 
             if (hasUsers)
@@ -21,7 +17,7 @@ namespace Infrastructure.Security
             {
                 Username = "admin",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(bootstrapPassword),
-                UserRole = "Administrator",
+                UserRole = LoginUser.AdministratorRole,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 LastLogin = null,

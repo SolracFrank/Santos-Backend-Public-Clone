@@ -471,3 +471,9 @@ obj/
 
 ## AI
 .codegraph
+.codex/
+opencode.jsonc
+.tmp/
+.env
+.env.*
+!.env.example

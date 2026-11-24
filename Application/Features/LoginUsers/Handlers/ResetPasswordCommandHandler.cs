@@ -2,6 +2,7 @@
 using Application.Features.LoginUsers.Mappers;
 using Domain.Common.Audit;
 using Domain.Common.Security;
+using Domain.Entities;
 using Domain.Entities.Dtos;
 using Domain.Exceptions;
 using LanguageExt.Common;
@@ -62,6 +63,15 @@ public class ResetPasswordCommandHandler
                 throw new NotFoundException(
                     $"Login user with id {request.Id} was not found.",
                     "LOGINUSER_NOT_FOUND");
+            }
+
+            if (user.Idloginuser != _currentUserService.IdLoginUser &&
+                _currentUserService.UserRole != LoginUser.AdministratorRole &&
+                (user.UserRole == LoginUser.AdministratorRole || user.CanManagePermissions ||
+                    user.CanCreateUsers || user.CanEditUsers || user.CanDisableUsers ||
+                    user.CanViewAuditLog || user.CanManageItems || user.CanDeleteItems || user.CanSendEmails))
+            {
+                throw new ForbiddenException("Only administrators can reset another privileged account.", "USER_RESET_PASSWORD_FORBIDDEN");
             }
 
             user.PasswordHash =

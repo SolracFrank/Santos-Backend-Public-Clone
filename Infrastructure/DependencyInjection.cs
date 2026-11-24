@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 public static class DependencyInjection
@@ -66,6 +67,7 @@ public static class DependencyInjection
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
+                options.EventsType = typeof(JwtSessionValidator);
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -82,7 +84,11 @@ public static class DependencyInjection
                     ClockSkew = TimeSpan.Zero
                 };
             });
-        builder.Services.AddAuthorization();
+        builder.Services.AddScoped<JwtSessionValidator>();
+        builder.Services.AddAuthorizationBuilder()
+            .SetFallbackPolicy(new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build());
         // Services
         builder.Services.AddTransient<IEmailService, OutlookGraphEmailService>();
 

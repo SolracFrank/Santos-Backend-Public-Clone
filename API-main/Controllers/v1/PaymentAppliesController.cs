@@ -1,7 +1,9 @@
 using Application.Features.PaymentApplies;
 using Domain.Entities.Dtos;
+using Domain.Entities;
 using EsApi.Controllers;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -46,6 +48,7 @@ public class PaymentAppliesController : BaseApiController
         return await SendAsync(new GetPaymentAppliesByInvoiceQuery(idInvoice), cancellationToken);
     }
 
+    [Authorize(Roles = LoginUser.AdministratorRole)]
     [HttpPost]
     [SwaggerOperation(Summary = "Creates a paymentapply.", Description = "Creates a new paymentapply using the request body.")]
     [SwaggerResponse(StatusCodes.Status200OK, "Returns the created paymentapply.", typeof(PaymentApplyDto))]
@@ -55,6 +58,7 @@ public class PaymentAppliesController : BaseApiController
         return await SendAsync(command, cancellationToken);
     }
 
+    [Authorize(Roles = LoginUser.AdministratorRole)]
     [HttpPut("{id:int}")]
     [SwaggerOperation(Summary = "Updates a paymentapply.", Description = "Updates an existing paymentapply using the provided id and request body.")]
     [SwaggerResponse(StatusCodes.Status200OK, "Returns the updated paymentapply.", typeof(PaymentApplyDto))]
@@ -67,6 +71,7 @@ public class PaymentAppliesController : BaseApiController
         return await SendAsync(command, cancellationToken);
     }
 
+    [Authorize(Roles = LoginUser.AdministratorRole)]
     [HttpDelete("{id:int}")]
     [SwaggerOperation(Summary = "Deletes a paymentapply.", Description = "Deletes the paymentapply that matches the provided id.")]
     [SwaggerResponse(StatusCodes.Status200OK, "The paymentapply was deleted.")]

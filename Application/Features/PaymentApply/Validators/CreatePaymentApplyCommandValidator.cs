@@ -6,6 +6,8 @@ public class CreatePaymentApplyCommandValidator : AbstractValidator<CreatePaymen
 {
     public CreatePaymentApplyCommandValidator()
     {
-        RuleFor(x => x).NotNull();
+        RuleFor(x => x.Idpayment).GreaterThan(0);
+        RuleFor(x => x.Idinvoice).GreaterThan(0);
+        RuleFor(x => x.AmountApplied).GreaterThan(0);
     }
 }

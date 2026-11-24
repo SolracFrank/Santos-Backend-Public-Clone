@@ -7,6 +7,8 @@ using LanguageExt.Common;
 using Domain.Common.Audit;
 using Domain.Common.Security;
 using Domain.Entities.Dtos;
+using Domain.Exceptions;
+using System.Data;
 
 namespace Application.Features.Invoices;
 
@@ -42,6 +44,7 @@ public class UpdateInvoiceCommandHandler : IRequestHandler<UpdateInvoiceCommand,
             if (request.Id != request.Idinvoice)
                 throw new ArgumentException("Id mismatch");
 
+            await using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
             var entity = await _context.Invoices
                 .FirstOrDefaultAsync(x => x.Idinvoice == request.Id, cancellationToken);
 
@@ -70,6 +73,12 @@ public class UpdateInvoiceCommandHandler : IRequestHandler<UpdateInvoiceCommand,
                     new InvalidOperationException(
                         "This invoice was modified by another user. Please reload it before saving."));
             }
+
+            var amountsApplied = await _context.PaymentApplies
+                .Where(allocation => allocation.Idinvoice == entity.Idinvoice)
+                .SumAsync(allocation => allocation.AmountApplied, cancellationToken);
+            if (amountsApplied > request.Total || (amountsApplied > 0 && request.Idusers != entity.Idusers))
+                throw new ConflictException("An invoice with allocated payments must keep its customer and cover the allocated amount.");
 
             entity.Invoicenumber = request.Invoicenumber;
             entity.Invoicedate = request.Invoicedate;
@@ -130,6 +139,7 @@ public class UpdateInvoiceCommandHandler : IRequestHandler<UpdateInvoiceCommand,
                 Succeeded = true,
                 Severity = AuditSeverity.Information
             });
+            await transaction.CommitAsync(cancellationToken);
 
             return new Result<Domain.Entities.Invoice>(entity);
         }

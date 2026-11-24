@@ -6,6 +6,6 @@ public class CreatePaymentCommandValidator : AbstractValidator<CreatePaymentComm
 {
     public CreatePaymentCommandValidator()
     {
-        RuleFor(x => x).NotNull();
+        RuleFor(x => x.Amount).GreaterThan(0);
     }
 }

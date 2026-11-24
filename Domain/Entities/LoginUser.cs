@@ -4,13 +4,15 @@ namespace Domain.Entities
 {
     public class LoginUser
     {
+        public const string AdministratorRole = "Administrator";
+
         public int Idloginuser { get; set; }
 
-        public string Username { get; set; }
+        public string Username { get; set; } = null!;
 
-        public string PasswordHash { get; set; }
+        public string PasswordHash { get; set; } = null!;
 
-        public string UserRole { get; set; }
+        public string UserRole { get; set; } = null!;
 
         public bool IsActive { get; set; }
 

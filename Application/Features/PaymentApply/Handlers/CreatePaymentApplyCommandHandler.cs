@@ -6,6 +6,7 @@ using LanguageExt.Common;
 using Domain.Common.Audit;
 using Domain.Common.Security;
 using Domain.Entities.Dtos;
+using System.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Features.PaymentApplies;
@@ -35,6 +36,10 @@ public class CreatePaymentApplyCommandHandler : IRequestHandler<CreatePaymentApp
 
         try
         {
+            await using var transaction = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+            var (payment, invoice) = await PaymentAllocationChecks.VerifyAsync(
+                _context, request.Idpayment, request.Idinvoice, request.AmountApplied, null, cancellationToken);
+
             var entity = new PaymentApply
             {
                 Idpaymentapply = request.Idpaymentapply,
@@ -54,12 +59,6 @@ public class CreatePaymentApplyCommandHandler : IRequestHandler<CreatePaymentApp
             }
             _logger.LogInformation("Changes saved for {HandlerName}.", nameof(CreatePaymentApplyCommandHandler));
 
-            var payment = await _context.Payments
-    .FirstOrDefaultAsync(x => x.Idpayment == entity.Idpayment, cancellationToken);
-
-            var invoice = await _context.Invoices
-                .FirstOrDefaultAsync(x => x.Idinvoice == entity.Idinvoice, cancellationToken);
-
             await _auditService.LogAsync(new AuditLogDto
             {
                 IdLoginUser = _currentUserService.IdLoginUser,
@@ -67,14 +66,12 @@ public class CreatePaymentApplyCommandHandler : IRequestHandler<CreatePaymentApp
                 Action = AuditActions.PaymentApplied,
                 EntityName = "PaymentApplies",
                 EntityId = entity.Idpaymentapply.ToString(),
-                Description =
-                    invoice == null || payment == null
-                        ? $"Applied payment amount {entity.AmountApplied:C2}."
-                        : $"Applied {entity.AmountApplied:C2} from payment #{payment.Paymentnumber} to invoice #{invoice.Invoicenumber}.",
+                Description = $"Applied {entity.AmountApplied:C2} from payment #{payment.Paymentnumber} to invoice #{invoice.Invoicenumber}.",
                 PerformedByRole = _currentUserService.UserRole,
                 Succeeded = true,
                 Severity = AuditSeverity.Information
             });
+            await transaction.CommitAsync(cancellationToken);
 
             var cleanEntity = new PaymentApply
             {

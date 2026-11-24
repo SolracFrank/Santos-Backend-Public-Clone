@@ -41,18 +41,7 @@ public sealed class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provi
             {
                 Title = "Operations API",
                 Version = description.GroupName,
-                Description = "Operations management API",
-                Contact = new OpenApiContact
-                {
-                    Name = "Operations API maintainers",
-                    Email = string.Empty,
-                    
-                },
-                License = new OpenApiLicense
-                {
-                    Name = "Free",
-                    Url = new Uri("https://github.com/")
-                }
+                Description = "API for customers, estimates, invoices, payments and operational records."
             };
 
             if (description.IsDeprecated)

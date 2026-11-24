@@ -1,7 +1,9 @@
 using Application.Features.Invoicedetails;
 using Domain.Entities.Dtos;
+using Domain.Entities;
 using EsApi.Controllers;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -38,6 +40,7 @@ public class InvoiceDetailsController : BaseApiController
         return await SendAsync(new GetInvoicedetailsByInvoiceQuery(idInvoice), cancellationToken);
     }
 
+    [Authorize(Roles = LoginUser.AdministratorRole)]
     [HttpPost]
     [SwaggerOperation(Summary = "Creates a invoicedetail.", Description = "Creates a new invoicedetail using the request body.")]
     [SwaggerResponse(StatusCodes.Status200OK, "Returns the created invoicedetail.", typeof(InvoicedetailDto))]
@@ -47,6 +50,7 @@ public class InvoiceDetailsController : BaseApiController
         return await SendAsync(command, cancellationToken);
     }
 
+    [Authorize(Roles = LoginUser.AdministratorRole)]
     [HttpPut("{id:int}")]
     [SwaggerOperation(Summary = "Updates a invoicedetail.", Description = "Updates an existing invoicedetail using the provided id and request body.")]
     [SwaggerResponse(StatusCodes.Status200OK, "Returns the updated invoicedetail.", typeof(InvoicedetailDto))]
@@ -59,6 +63,7 @@ public class InvoiceDetailsController : BaseApiController
         return await SendAsync(command, cancellationToken);
     }
 
+    [Authorize(Roles = LoginUser.AdministratorRole)]
     [HttpDelete("{id:int}")]
     [SwaggerOperation(Summary = "Deletes a invoicedetail.", Description = "Deletes the invoicedetail that matches the provided id.")]
     [SwaggerResponse(StatusCodes.Status200OK, "The invoicedetail was deleted.")]
@@ -68,6 +73,7 @@ public class InvoiceDetailsController : BaseApiController
         return await SendOkAsync(new DeleteInvoicedetailCommand(id), cancellationToken);
     }
 
+    [Authorize(Roles = LoginUser.AdministratorRole)]
     [HttpDelete("by-invoice/{idInvoice:int}")]
     [SwaggerOperation(Summary = "Deletes invoice details by invoice.", Description = "Deletes all details associated with an invoice.")]
     [SwaggerResponse(StatusCodes.Status200OK, "The invoice details were deleted.")]
